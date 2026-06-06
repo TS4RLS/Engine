@@ -18,6 +18,7 @@ import json
 import os
 import random
 import struct
+import time
 import zlib
 import sys
 import subprocess
@@ -394,6 +395,19 @@ def main():
 
     print("\nDone! Launch The Sims 4 to see your random loading screen.")
     print("=" * 69)
+
+    if LAUNCH_GAME:
+        for i in range(15, 0, -1):
+            print(f"\r  Closing in {i}s...  ", end="", flush=True)
+            time.sleep(1)
+        print()
+    else:
+        print("\n  Press any key to close...")
+        try:
+            import msvcrt
+            msvcrt.getch()
+        except ImportError:
+            input()
 
 
 if __name__ == "__main__":

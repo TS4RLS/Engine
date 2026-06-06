@@ -44,7 +44,3 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo.
-echo  Press any key to close this window. 
-echo  Make sure to launch The Sims 4 unless you enabled auto-launch in the script settings.
-pause >nul

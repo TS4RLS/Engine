@@ -69,6 +69,7 @@ GAME_EXE            = _cfg.get("game_exe", "")
 LAUNCH_VIA_STEAM    = _cfg.get("launch_via_steam", True)
 TARGET_WIDTH        = _cfg.get("target_width", 1920)
 TARGET_HEIGHT       = _cfg.get("target_height", 1080)
+RENAME_FILES        = _cfg.get("rename_files", False)
 
 # ── END CONFIGURATION ──────────────────────────────────────────────────────────
 
@@ -314,6 +315,11 @@ def main():
         print(f"\n[ERROR] Images folder not found:\n  {IMAGES_FOLDER}")
         print("  Update 'images_folder' in config.json.")
         sys.exit(1)
+
+    if RENAME_FILES:
+        print("\nRenaming images...")
+        from Sims4_RLS_ImagesRenamer import rename_and_convert
+        rename_and_convert(IMAGES_FOLDER)
 
     if not os.path.isdir(MODS_FOLDER):
         print(f"\n[ERROR] Mods folder not found:\n  {MODS_FOLDER}")

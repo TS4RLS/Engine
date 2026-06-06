@@ -3,6 +3,7 @@
     "mods_folder": "C:/Users/YourName/Documents/Electronic Arts/The Sims 4/Mods",
     "is_vertical": false,
     "launch_game": false,
+    "rename_files": false,
     "game_exe": "C:/Program Files/EA Games/The Sims 4/Game/Bin/TS4_x64.exe",
     "launch_via_steam": false,
     "target_width": 1920,

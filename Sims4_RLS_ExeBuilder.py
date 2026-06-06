@@ -53,32 +53,14 @@ def ensure_pyinstaller():
         print("PyInstaller installed.\n")
 
 
-def png_to_ico(png_path: str) -> str:
-    """Convert a PNG to a multi-resolution .ico next to the source file."""
-    from PIL import Image
-    ico_path = os.path.splitext(png_path)[0] + ".ico"
-    img = Image.open(png_path).convert("RGBA")
-    sizes = [(16, 16), (32, 32), (48, 48), (256, 256)]
-    resized = [img.resize(s, Image.LANCZOS) for s in sizes]
-    resized[0].save(ico_path, format="ICO", sizes=sizes,
-                    append_images=resized[1:])
-    return ico_path
-
-
 def build():
     ensure_pyinstaller()
 
-    png_path = os.path.join(SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "ExeIcon_DONOTRENAME_DONOTREMOVE.png")
-    if os.path.isfile(png_path):
-        try:
-            ico_path = png_to_ico(png_path)
-            print(f"Icon converted: {ico_path}")
-            icon_args = [f"--icon={ico_path}"]
-        except Exception as e:
-            print(f"[WARNING] Icon conversion failed ({e}) — building without custom icon.")
-            icon_args = []
+    ico_path = os.path.join(SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "ExeIcon_DONOTRENAME_DONOTREMOVE.ico")
+    if os.path.isfile(ico_path):
+        icon_args = [f"--icon={ico_path}"]
     else:
-        print("[WARNING] ExeIcon_DONOTRENAME_DONOTREMOVE.png not found — building without custom icon.")
+        print("[WARNING] ExeIcon_DONOTRENAME_DONOTREMOVE.ico not found — building without custom icon.")
         icon_args = []
 
     print(f"Writing temporary launcher script...")

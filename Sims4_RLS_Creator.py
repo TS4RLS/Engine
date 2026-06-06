@@ -75,7 +75,7 @@ RENAME_FILES        = _cfg.get("rename_files", False)
 
 _SCRIPT_DIR         = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_PACKAGE    = os.path.join(
-    _SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "TemplateLoadingScreen_DONOTRENAMEORREMOVE.package"
+    _SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package"
 )
 OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
 SIMS4_STEAM_APP_ID  = "1222670"
@@ -198,7 +198,7 @@ def get_template_image_size() -> tuple:
     """Return (width, height) of the image stored in the template package."""
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure TemplateLoadingScreen_DONOTRENAMEORREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
+        print("  Ensure TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
         sys.exit(1)
     gfx     = _load_template_gfx(TEMPLATE_PACKAGE)
     img_off = _find_image_block_offset(gfx)
@@ -227,7 +227,7 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
     """
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure TemplateLoadingScreen_DONOTRENAMEORREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
+        print("  Ensure TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
         sys.exit(1)
 
     gfx = _load_template_gfx(TEMPLATE_PACKAGE)

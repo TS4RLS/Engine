@@ -6,7 +6,7 @@ title Sims 4 Random Loading Screen
 :: It calls the Python script which picks a random image and
 :: installs it as your loading screen mod.
 ::
-:: Place this .bat file in the same folder as random_loading_screen.py
+:: Place this .bat file in the same folder as Sims4_RLS_Creator.py
 :: ─────────────────────────────────────────────────────────────────
 
 echo.
@@ -35,7 +35,7 @@ if errorlevel 1 (
 )
 
 :: Run the main script (located in the same folder as this .bat)
-python "%~dp0random_loading_screen.py"
+python "%~dp0Sims4_RLS_Creator.py"
 
 if errorlevel 1 (
     echo.

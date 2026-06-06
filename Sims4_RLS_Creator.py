@@ -11,9 +11,10 @@ Requirements:
   - Pillow  (pip install Pillow)
 
 Configuration:
-  Edit the SETTINGS block below to match your setup.
+  Copy config.example.json to config.json and fill in your paths.
 """
 
+import json
 import os
 import random
 import struct
@@ -22,48 +23,61 @@ import sys
 import subprocess
 from pathlib import Path
 
-# ── SETTINGS ─────────────────────────────────────────────────────────────────
+# ── CONFIGURATION ─────────────────────────────────────────────────────────────
 
-# Folder containing your images (PNG or JPG). All sub-folders are also scanned.
-IMAGES_FOLDER = r"B:\The Sims 4 Loading Screens"
+def _load_config() -> dict:
+    script_dir  = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.json")
 
-# Your Sims 4 Mods folder.
-MODS_FOLDER = r"C:\Users\leo\Documents\Electronic Arts\The Sims 4\Mods"
+    if not os.path.isfile(config_path):
+        example_path = os.path.join(script_dir, "config.example.json")
+        print("[ERROR] config.json not found.")
+        print("  Copy config.example.json to config.json and fill in your paths:")
+        print(f'    copy "{example_path}" "{config_path}"')
+        sys.exit(1)
 
-# Name of the output .package file (placed inside MODS_FOLDER).
-OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            text = f.read()
+        # Allow single backslashes in paths — protect existing \\ pairs, then
+        # double up any lone \, then restore the protected pairs.
+        _ph = "\x00"
+        text = text.replace("\\\\", _ph)
+        text = text.replace("\\", "\\\\")
+        text = text.replace(_ph, "\\\\")
+        cfg = json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] config.json contains invalid JSON: {e}")
+        sys.exit(1)
 
-# Path to any working loading screen .package to use as a structural template.
-# This must be a valid TS4 loading screen mod (e.g. from Khyan's pack).
-TEMPLATE_PACKAGE = (
-    r"C:\Users\leo\Downloads"
-    r"\_UNZIP_ME!!!__OPTIONAL_INSTALL_ONLY_ONE_Loading_Screens_Override"
-    r"\OPTIONAL_INSTALL_ONLY_ONE_Loading_Screens_Override"
-    r"\KhyanLoadingScreen.package"
+    for key in ("images_folder", "mods_folder"):
+        if key not in cfg:
+            print(f"[ERROR] config.json is missing required key: '{key}'")
+            print("  See config.example.json for the full list of settings.")
+            sys.exit(1)
+
+    return cfg
+
+
+_cfg = _load_config()
+
+IMAGES_FOLDER       = _cfg["images_folder"]
+MODS_FOLDER         = _cfg["mods_folder"]
+IS_VERTICAL         = _cfg.get("is_vertical", True)
+LAUNCH_GAME         = _cfg.get("launch_game", True)
+GAME_EXE            = _cfg.get("game_exe", "")
+LAUNCH_VIA_STEAM    = _cfg.get("launch_via_steam", True)
+TARGET_WIDTH        = _cfg.get("target_width", 1920)
+TARGET_HEIGHT       = _cfg.get("target_height", 1080)
+
+# ── END CONFIGURATION ──────────────────────────────────────────────────────────
+
+_SCRIPT_DIR         = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_PACKAGE    = os.path.join(
+    _SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "TemplateLoadingScreen_DONOTRENAMEORREMOVE.package"
 )
-
-# If True, pick 3 random vertical (portrait) images and combine them
-# side-by-side into one horizontal image.
-# If False, pick 1 image and use it directly.
-IS_VERTICAL = True
-
-# Set to True to launch the game after generating the package.
-LAUNCH_GAME = True
-
-# Game executable path (only needed if LAUNCH_GAME = True and LAUNCH_VIA_STEAM = False).
-GAME_EXE = r"C:\Program Files\EA Games\The Sims 4\Game\Bin\TS4_x64.exe"
-
-# Set True to launch via Steam instead of directly.
-LAUNCH_VIA_STEAM = True
-# Steam app ID for Sims 4 (don't change this).
-SIMS4_STEAM_APP_ID = "1222670"
-
-# Target resolution for the combined / single image.
-TARGET_WIDTH  = 1920
-TARGET_HEIGHT = 1080
-
-# ── END SETTINGS ──────────────────────────────────────────────────────────────
-
+OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
+SIMS4_STEAM_APP_ID  = "1222670"
 
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff"}
 
@@ -183,6 +197,7 @@ def get_template_image_size() -> tuple:
     """Return (width, height) of the image stored in the template package."""
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
+        print("  Ensure TemplateLoadingScreen_DONOTRENAMEORREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
         sys.exit(1)
     gfx     = _load_template_gfx(TEMPLATE_PACKAGE)
     img_off = _find_image_block_offset(gfx)
@@ -211,8 +226,7 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
     """
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Set TEMPLATE_PACKAGE in the script settings to any working")
-        print("  loading screen .package file.")
+        print("  Ensure TemplateLoadingScreen_DONOTRENAMEORREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
         sys.exit(1)
 
     gfx = _load_template_gfx(TEMPLATE_PACKAGE)
@@ -298,12 +312,12 @@ def main():
 
     if not os.path.isdir(IMAGES_FOLDER):
         print(f"\n[ERROR] Images folder not found:\n  {IMAGES_FOLDER}")
-        print("  Edit IMAGES_FOLDER in the script settings.")
+        print("  Update 'images_folder' in config.json.")
         sys.exit(1)
 
     if not os.path.isdir(MODS_FOLDER):
         print(f"\n[ERROR] Mods folder not found:\n  {MODS_FOLDER}")
-        print("  Edit MODS_FOLDER in the script settings.")
+        print("  Update 'mods_folder' in config.json.")
         sys.exit(1)
 
     output_folder = os.path.join(MODS_FOLDER, "RandomLoadingScreen")

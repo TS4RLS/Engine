@@ -1,10 +1,10 @@
 """
-Build script — compiles Launch_RandomLoadingScreen.bat into a standalone .exe.
+Build script — compiles Sims4_RLS_Launcher.bat into a standalone .exe.
 
 Run this whenever you want to create or refresh the exe:
-    python build_exe.py
+    python Sims4_RLS_ExeBuilder.py
 
-The resulting Launch_RandomLoadingScreen.exe will appear in this folder.
+The resulting Sims4_RLS_Launcher.exe will appear in this folder.
 It simply calls the .bat file next to it, so you never need to rebuild
 unless you want a fresh exe — editing the .bat is enough for day-to-day changes.
 """
@@ -16,7 +16,7 @@ import subprocess
 import textwrap
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-EXE_NAME    = "Launch_RandomLoadingScreen"
+EXE_NAME    = "Sims4_RLS_Launcher"
 TEMP_PY     = os.path.join(SCRIPT_DIR, "_launcher_temp.py")
 BUILD_DIR   = os.path.join(SCRIPT_DIR, "_build_temp")
 
@@ -26,13 +26,13 @@ _LAUNCHER_CODE = textwrap.dedent("""\
 
     base = os.path.dirname(sys.executable if getattr(sys, 'frozen', False)
                            else os.path.abspath(__file__))
-    bat  = os.path.join(base, 'Launch_RandomLoadingScreen.bat')
+    bat  = os.path.join(base, 'Sims4_RLS_Launcher.bat')
 
     if not os.path.isfile(bat):
         ctypes.windll.user32.MessageBoxW(
             0,
             f'Cannot find the batch file:\\n{bat}\\n\\n'
-            'Make sure the .exe is in the same folder as Launch_RandomLoadingScreen.bat.',
+            'Make sure the .exe is in the same folder as Sims4_RLS_Launcher.bat.',
             'Launcher Error',
             0x10,
         )
@@ -56,6 +56,13 @@ def ensure_pyinstaller():
 def build():
     ensure_pyinstaller()
 
+    icon_path = os.path.join(SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "ExeIcon_DONOTRENAME_DONOTREMOVE.png")
+    if os.path.isfile(icon_path):
+        icon_args = [f"--icon={icon_path}"]
+    else:
+        print(f"[WARNING] ExeIcon_DONOTRENAME_DONOTREMOVE.png not found — building without custom icon.")
+        icon_args = []
+
     print(f"Writing temporary launcher script...")
     with open(TEMP_PY, "w") as f:
         f.write(_LAUNCHER_CODE)
@@ -71,6 +78,7 @@ def build():
                 f"--distpath={SCRIPT_DIR}",         # put .exe directly in this folder
                 f"--workpath={BUILD_DIR}",
                 f"--specpath={BUILD_DIR}",
+                *icon_args,
                 TEMP_PY,
             ],
             cwd=SCRIPT_DIR,

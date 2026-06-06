@@ -380,6 +380,8 @@ def main():
     print(f"Written to: {output_path}")
     print(f"Package size: {len(package_bytes) / 1024:.1f} KB")
 
+    LAUNCH_MSG = "The Sims 4 will now launch with your new random loading screen." if LAUNCH_GAME else "Random loading screen package created. Launch the game to see it in action."
+
     if LAUNCH_GAME:
         print("\nLaunching Sims 4...")
         if LAUNCH_VIA_STEAM:
@@ -393,7 +395,8 @@ def main():
             print(f"[WARNING] Game executable not found: {GAME_EXE}")
             print("  Set GAME_EXE or LAUNCH_VIA_STEAM in the script settings.")
 
-    print("\nDone! Launch The Sims 4 to see your random loading screen.")
+    print("\nDone!")
+    print(LAUNCH_MSG)
     print("=" * 69)
 
     if LAUNCH_GAME:

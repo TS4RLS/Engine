@@ -12,8 +12,24 @@ import json
 import os
 import random
 import string
+import subprocess
 import sys
 from pathlib import Path
+
+
+def _ensure_dependencies():
+    import importlib.util
+    if importlib.util.find_spec("PIL") is None:
+        print(" Pillow not found — installing...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "Pillow", "--quiet"],
+            stdout=subprocess.DEVNULL,
+        )
+        print(" Pillow installed.")
+        print()
+
+
+_ensure_dependencies()
 
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff"}
 

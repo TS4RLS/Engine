@@ -43,9 +43,8 @@ _LAUNCHER_CODE = textwrap.dedent("""\
 
 
 def ensure_pyinstaller():
-    try:
-        import PyInstaller  # noqa: F401
-    except ImportError:
+    import importlib.util
+    if importlib.util.find_spec("PyInstaller") is None:
         print("PyInstaller not found — installing...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "pyinstaller", "--quiet"]

@@ -24,6 +24,21 @@ import sys
 import subprocess
 from pathlib import Path
 
+
+def _ensure_dependencies():
+    import importlib.util
+    if importlib.util.find_spec("PIL") is None:
+        print(" Pillow not found — installing...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "Pillow", "--quiet"],
+            stdout=subprocess.DEVNULL,
+        )
+        print(" Pillow installed.")
+        print()
+
+
+_ensure_dependencies()
+
 # ── CONFIGURATION ─────────────────────────────────────────────────────────────
 
 def _load_config() -> dict:

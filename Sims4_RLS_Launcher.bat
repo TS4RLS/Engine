@@ -35,7 +35,7 @@ if errorlevel 1 (
 )
 
 :: Run the main script (located in the same folder as this .bat)
-python "%~dp0Sims4_RLS_Creator.py"
+python "%~dp0Sims4_RLS_Creator.py" %*
 
 if errorlevel 1 (
     echo.

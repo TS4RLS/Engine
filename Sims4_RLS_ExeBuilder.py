@@ -44,7 +44,8 @@ _LAUNCHER_CODE = textwrap.dedent("""\
     subprocess.run(['cmd', '/c', bat], cwd=base)
 """)
 
-# CurseForge launcher: same but passes --no-launch so the game is never started.
+# CurseForge launcher: same but passes --force-launch so the game always starts,
+# regardless of the launch_game setting in config.json.
 _CURSEFORGE_LAUNCHER_CODE = textwrap.dedent("""\
     import os, sys, subprocess, ctypes
 
@@ -62,7 +63,7 @@ _CURSEFORGE_LAUNCHER_CODE = textwrap.dedent("""\
         )
         sys.exit(1)
 
-    subprocess.run(['cmd', '/c', bat, '--no-launch'], cwd=base)
+    subprocess.run(['cmd', '/c', bat, '--force-launch'], cwd=base)
 """)
 
 
@@ -146,7 +147,7 @@ def build():
     if cfg.get("create_curseforge_version", False):
         cf_path = _build_exe("TS4_x64", _CURSEFORGE_LAUNCHER_CODE, icon_args)
         print(f"\nCurseForge version ready: {cf_path}")
-        print("This exe will not launch the game — use it as your CurseForge pre-launch script.")
+        print("This exe always launches the game — use it as your CurseForge pre-launch script.")
 
 
 if __name__ == "__main__":

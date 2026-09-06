@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" width="500" alt="Sims 4 Random Loading Screen">
+</p>
+
 # Sims 4 Random Loading Screen
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.

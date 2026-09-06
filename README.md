@@ -100,6 +100,23 @@ The output won't conflict with other mods as long as no other loading screen `.p
 
 ---
 
+## Testing
+
+Unit tests cover the pure logic in the Python scripts (image discovery,
+resizing/cropping, ARGB packing, `.package` splicing, config parsing, and
+file renaming) using temporary directories — no test touches your real
+`config.json`, images, Mods folder, or the game itself.
+
+```
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the same suite
+on every push and pull request.
+
+---
+
 ## Do not rename or remove
 
 The `.DONOTRENAME_DONOTREMOVE/` folder must stay intact:

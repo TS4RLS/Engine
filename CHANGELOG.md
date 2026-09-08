@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.0.1] - 2026-09-08
+
+### Changed
+- Footer's attribution line reformatted from "Written by" to "Built & Maintained by", matching Automater's standard StuxieDev footer wording
+
 ## [1.0.0] - 2026-09-06
 ### Added
 - **`LICENSE.md`** — the project is now formally licensed (closed-source,

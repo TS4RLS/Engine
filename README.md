@@ -127,3 +127,7 @@ The `.DONOTRENAME_DONOTREMOVE/` folder must stay intact:
 
 - `TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package` — base mod template used to build each package
 - `ExeIcon_DONOTRENAME_DONOTREMOVE.ico` — icon embedded into the `.exe` at build time
+
+---
+
+*Built & Maintained by <img src="https://github.com/StuxieDev.png" height="14" alt="StuxieDev" valign="middle"> [StuxieDev](https://github.com/StuxieDev).*

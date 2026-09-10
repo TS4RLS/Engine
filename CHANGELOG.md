@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [2.0.3] - 2026-09-10
+
+### Changed
+- `logo_dark.png`/`logo_light.png` wordmark text now uses the same green
+  as its paired icon (was a separately-chosen dark text/white text pair)
+  and the canvas is auto-cropped to its content instead of shipping a
+  fixed-width image with a large empty margin on the right.
+- `assets/steam/logo_dark.png`/`logo_light.png` (the Steam "Library logo"
+  slot) was missing the "TS4RLS" shortcode entirely (subtitle only) —
+  added it back in a lighter green readable against the transparent
+  background regardless of what it's composited over.
+
 ## [2.0.2] - 2026-09-10
 
 ### Changed

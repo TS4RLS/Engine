@@ -65,7 +65,7 @@ _RESOURCE_INSTANCE = 0x432D1D2ADDFFC6D8
 
 def _get_version() -> str:
     try:
-        with open(os.path.join(_ROOT, "VERSION.md"), "r", encoding="utf-8") as f:
+        with open(paths.resource_path("VERSION.md"), "r", encoding="utf-8") as f:
             return f.read().strip()
     except OSError:
         return "?"
@@ -79,7 +79,7 @@ def load_config() -> dict:
     if not os.path.isfile(config_path):
         raise GeneratorError(
             "config.json not found.\n"
-            "  Open the GUI's Settings tab to create one, or see config.example.json."
+            "  Open the GUI's Build tab to create one, or see config.example.json."
         )
 
     try:

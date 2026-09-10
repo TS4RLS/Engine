@@ -24,6 +24,7 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 from src.cli import cli_colors
+from src.common import app_state
 
 APP_EXE_NAME = "TS4RLS"
 DIST_DIR     = os.path.join(ROOT_DIR, "dist")
@@ -35,7 +36,10 @@ _DATA_SEP = ";" if IS_WINDOWS else ":"
 _BUNDLED_DATA = [
     (os.path.join("assets", "template.package"), "assets"),
     (os.path.join("assets", "icon.png"), "assets"),
+    (os.path.join("assets", "author.png"), "assets"),
     (os.path.join("assets", "steam"), os.path.join("assets", "steam")),
+    ("VERSION.md", "."),
+    ("CHANGELOG.md", "."),
 ]
 
 
@@ -131,6 +135,8 @@ def build():
 
     if not IS_WINDOWS:
         os.chmod(exe_path, 0o755)
+
+    app_state.record_build(exe_path)
 
     print(f"\nDone!  App ready: {exe_path}")
     print("Double-click for the GUI, or run with --generate.")

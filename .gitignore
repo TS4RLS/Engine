@@ -1,6 +1,7 @@
 __pycache__/
 .pytest_cache/
 config.json
+app_state.json
 *.exe
 /dist/
 .curseclient

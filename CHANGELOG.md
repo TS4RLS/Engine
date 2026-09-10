@@ -5,6 +5,34 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.1.0] - 2026-09-10
+
+### Added
+- **First-launch disclaimer**: a one-time modal (unofficial/independent
+  tool, backs up nothing itself, "as is" — no warranty) shown before the
+  main window on first run, gated by a flag in the new `app_state.json`
+  (kept separate from `config.json`, which the Build tab fully overwrites
+  on every save).
+- **Recent build history**: every successful `src/build/executable_builder.py`
+  run records the built exe's path and timestamp; the Build tab shows the
+  full list (each with a **Copy path** button) and the Home tab shows the
+  latest one at a glance.
+- **Changelog viewer** on the About tab: renders `CHANGELOG.md` (headings,
+  bullets, bold, code spans) with a **Reload** button, plus **Website**,
+  **Author** (linking to stuxie.dev), and **A StuxieDev Project** (linking
+  to projects.stuxie.dev) links.
+- `VERSION.md`/`CHANGELOG.md`/`assets/author.png` are now bundled into the
+  built executable (previously only used from source, so a shipped exe
+  couldn't actually read its own version or changelog).
+
+### Changed
+- **GUI restructured into Home / Build / About tabs** (was Settings /
+  Actions / About): **Home** is daily use — read-only current-settings
+  display, Generate/Rename/Build buttons, the legacy-folder warning, and
+  the latest-build card; **Build** is where you edit settings and build
+  the executable (settings editing always available, build/test tooling
+  only when running from source).
+
 ## [4.0.0] - 2026-09-10
 
 ### Changed

@@ -6,7 +6,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it, then launch the game yourself and get a fresh screen every time.
 
-**Version 4.0.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 4.1.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -22,9 +22,9 @@ it's a single self-contained file, nothing else to install. Double-click it
 for the GUI, or run it from a terminal with `--generate` for a headless
 one-shot run.
 
-- **First run**: the Settings tab lets you set your images folder, Mods
-  folder, and a handful of optional settings — no manual config file
-  editing required.
+- **First run**: a one-time disclaimer, then the **Build** tab lets you set
+  your images folder, Mods folder, and a handful of optional settings — no
+  manual config file editing required.
 - Settings are stored per-user (Windows: `%APPDATA%`, macOS:
   `~/Library/Application Support`, Linux: `~/.config`), so the app works
   the same no matter where you put the executable.
@@ -39,7 +39,7 @@ Drop PNG, JPG, BMP, WebP, or TIFF images into the images folder you set up. Sub-
 
 **2. Run before launching the game**
 
-- **GUI**: double-click the executable, go to the **Actions** tab, click
+- **GUI**: double-click the executable, go to the **Home** tab, click
   **Generate loading screen**.
 - **Unattended** (scripts, other launchers, a Steam shortcut): run it with
   `--generate`. It never blocks waiting for a keypress.
@@ -50,14 +50,15 @@ Either way, it picks a random image and builds the mod. Launch Sims 4 yourself a
 
 ## Configuration
 
-Use the **Settings** tab to change anything — it reads and writes
+Use the **Build** tab to change anything — it reads and writes
 `config.json` directly. Only `images_folder` and `mods_folder` are
-required; everything else has a default.
+required; everything else has a default. The Home tab shows your current
+settings read-only and links to the Build tab to change them.
 
 | Key | Required | Default | Description |
 |---|---|---|---|
 | `images_folder` | ✓ | — | Folder containing your source images |
-| `mods_folder` | ✓ | — | Your Sims 4 Mods folder — this is your Sims 4 game data folder with `Mods` added (e.g. `Documents/Electronic Arts/The Sims 4/Mods`), not the game's installation directory. The Settings tab pre-fills this automatically if it finds it. |
+| `mods_folder` | ✓ | — | Your Sims 4 Mods folder — this is your Sims 4 game data folder with `Mods` added (e.g. `Documents/Electronic Arts/The Sims 4/Mods`), not the game's installation directory. The Build tab pre-fills this automatically if it finds it. |
 | `is_vertical` | | `true` | When `true`, combines **2 portrait images** side-by-side into one landscape loading screen |
 | `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image |
 | `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt |
@@ -100,10 +101,10 @@ The output won't conflict with other mods as long as no other loading screen `.p
 
 | Problem | Fix |
 |---|---|
-| `config.json not found` | Run the app and fill in the Settings tab — it's created on first save |
-| `config.json missing required key` | Use the Settings tab to fill it in |
-| `Images folder not found` | Update `images_folder` in Settings |
-| `Mods folder not found` | Update `mods_folder` in Settings |
+| `config.json not found` | Run the app and fill in the Build tab — it's created on first save |
+| `config.json missing required key` | Use the Build tab to fill it in |
+| `Images folder not found` | Update `images_folder` in the Build tab |
+| `Mods folder not found` | Update `mods_folder` in the Build tab |
 | `No images found` | Check the folder path and that your files are PNG/JPG/BMP/WebP/TIFF |
 | Loading screen unchanged in-game | Delete `localthumbcache.package` from your Mods folder, then relaunch |
 | Still showing blue loading screen | Remove any other loading screen `.package` from your Mods folder |
@@ -117,9 +118,6 @@ just download the executable above.
 
 - **Requirements**: Python 3.6+, `pip install -r requirements.txt`
   (`Pillow`/`PyInstaller` are also installed automatically if missing).
-- Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) for
-  a small dev menu: open the app, build the executable(s), or run the test
-  suite.
 - `python gui.py` (GUI) or `python gui.py --generate` (headless) run the
   app directly without building anything.
 - `python src/build/executable_builder.py` builds `TS4RLS`(`.exe`) into
@@ -140,6 +138,11 @@ These files in `assets/` are required at runtime/build time, not just artwork:
 - `template.package` — base mod template every generated loading screen is spliced into
 - `icon.ico` / `icon.icns` / `icon.png` — the app's icon (window icon and the executable's icon)
 - `logo.png` — the wordmark logo
+- `author.png` — avatar shown next to the author link on the About tab
+
+`VERSION.md` and `CHANGELOG.md` at the repo root are also bundled into the
+executable — the GUI reads its own version from the former and renders the
+latter in the About tab's changelog viewer.
 
 ---
 

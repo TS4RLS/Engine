@@ -11,21 +11,21 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 1. Python 3.6+
 2. `pip install -r requirements.txt` (installs `pytest` and `Pillow`;
    `Pillow` and `PyInstaller` are also installed automatically on first
-   run of the dev launcher/exe builder if missing)
-3. Run `Launcher.bat`/`Launcher.sh` once and pick **1) Launch the GUI** —
-   the Settings tab writes `config.json` for you. (See the
-   [README](../README.md) for the full option list if you'd rather edit it
-   by hand, or copy `config.example.json`.)
+   run of the exe builder if missing)
+3. Run `python gui.py` once — the Build tab writes `config.json` for
+   you. (See the [README](../README.md) for the full option list if you'd
+   rather edit it by hand, or copy `config.example.json`.)
 
 ## Project layout
 
 ```
-gui.py    single entry point at the repo root — the tkinter GUI, and
-          (--generate) a headless one-shot run. This is what gets compiled
-          into the distributed executable.
+gui.py    single entry point at the repo root — the tkinter GUI (Home,
+          Build, About tabs), and (--generate) a headless one-shot run.
+          This is what gets compiled into the distributed executable.
 src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
-            location resolution)
+            location resolution), app_state.py (disclaimer flag + recent
+            build history, kept separate from user-editable config.json)
   core/     generator.py (the actual mod generation logic), renamer.py
   cli/      cli_colors.py, config_editor.py (config.json read/write
             helpers used by the GUI and the build script)
@@ -34,10 +34,8 @@ dist/       built executables land here (gitignored) — not the repo root
 ```
 
 There is no text-menu CLI — the GUI is the only interactive interface.
-`Launcher.bat`/`Launcher.sh` are the from-source dev entry point (a small
-menu for running/building/testing without installing anything extra).
-They're not what end users download — that's the executable built by
-`src/build/executable_builder.py`.
+Run `python gui.py` from source to launch it directly; end users instead
+download the executable built by `src/build/executable_builder.py`.
 
 ## Making a change
 
@@ -59,8 +57,8 @@ request.
 For anything the test suite doesn't cover (the actual `.package` output
 loading correctly in-game, the executable build), verify manually:
 
-- Run `python gui.py --generate` (or `Launcher.bat`/`Launcher.sh --generate`)
-  against a real `images_folder`/`mods_folder` and confirm the loading
+- Run `python gui.py --generate` against a real
+  `images_folder`/`mods_folder` and confirm the loading
   screen changes in-game. `python gui.py` with no args opens the GUI.
 - If you touched `src/build/executable_builder.py`, rebuild the
   executable locally (`python src/build/executable_builder.py`) and

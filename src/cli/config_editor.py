@@ -1,8 +1,8 @@
 """
-config.json read/write helpers, shared by gui.py (Settings tab) and
+config.json read/write helpers, shared by gui.py (Build tab) and
 src/build/executable_builder.py. Not a CLI tool itself — the interactive
 config wizard was removed along with the rest of the text-menu CLI; the
-GUI's Settings tab is the only editor now.
+GUI's Build tab is the only editor now.
 """
 
 import json

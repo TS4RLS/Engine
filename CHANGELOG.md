@@ -5,6 +5,31 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.3.0] - 2026-09-10
+
+### Added
+- **`STEAM_GUIDE.md`** — explains the `assets/steam/` artwork set and how to
+  apply it to a non-Steam-game shortcut, linking to a community walkthrough.
+- **`assets/steam/*_alt.png`** — CurseForge-branded (`alt_icon`) counterpart
+  of every Steam artwork asset (`cover_alt.png`, `wide_cover_alt.png`,
+  `background_alt.png`, `logo_alt.png`), for the `TS4_x64.exe` shortcut.
+
+### Changed
+- **`assets/steam/`** — the Steam artwork set now lives in its own
+  subfolder instead of loose `steam_*.png` files at the top of `assets/`,
+  and is generated at Steam's actual current library grid resolutions
+  instead of half-size placeholders: `cover.png` (600×900, was
+  `steam_cover.png` at the same size), `wide_cover.png` (920×430, was
+  `steam_header.png` at 460×215), `background.png` (3840×1240, was
+  `steam_hero.png` at 1920×620), `logo.png` (1280×720, was `steam_logo.png`
+  at 640×360). `steam_small.png` moved to `small_capsule.png` unchanged.
+
+### Fixed
+- **`assets/alt_icon.ico`** had an opaque white background instead of a
+  transparent one (inconsistent with `icon.ico` and with `alt_icon.png`/
+  `alt_icon.icns`, which were already transparent) — regenerated from
+  `alt_icon.icns` with alpha preserved.
+
 ## [1.2.0] - 2026-09-10
 
 ### Added

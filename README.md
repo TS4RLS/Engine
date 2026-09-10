@@ -88,6 +88,14 @@ skipped on macOS/Linux.
 
 ---
 
+## Steam artwork
+
+`assets/steam/` has a full set of custom Steam library artwork for the
+non-Steam-game shortcut — see **[STEAM_GUIDE.md](STEAM_GUIDE.md)** for the
+asset list and how to apply it.
+
+---
+
 ## How it works
 
 The Sims 4 loading screen is a `.package` file (DBPF 2.0 format) containing a single compressed image at a known resource key. Each run:
@@ -142,7 +150,8 @@ src/
   package_generator.py      Generates the loading screen mod
   images_renamer.py         Renames/converts images to JPEG
   executable_builder.py     Builds the standalone executable(s)
-assets/                     Icons, logo, template.package, Steam artwork
+assets/                     Icons, logo, template.package
+  steam/                    Steam library artwork (see STEAM_GUIDE.md)
 config.json                 Your personal settings (gitignored)
 ```
 

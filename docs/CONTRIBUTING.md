@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../assets/logo.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
+  <img src="../assets/logo.png" width="300" alt="TS4RLS — The Sims 4 Random Loading Screen">
 </p>
 
 # Contributing to TS4RLS

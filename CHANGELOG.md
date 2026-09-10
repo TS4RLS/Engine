@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.1.1] - 2026-09-10
+
+### Changed
+- README/CONTRIBUTING header logo shrunk from `width="500"` to `width="300"`.
+
 ## [4.1.0] - 2026-09-10
 
 ### Added

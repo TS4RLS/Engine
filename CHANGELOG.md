@@ -5,6 +5,16 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.3.4] - 2026-09-10
+
+### Added
+- **`non_interactive` config key** (default `true`) — controls whether
+  `src/package_generator.py` blocks on the final "press any key to close"
+  prompt when `launch_game` is `false`. Previously this only skipped when
+  invoked with `--generate`; now it's off by default everywhere, and can be
+  set to `false` in `config.json` to bring the prompt back for the
+  interactive menu.
+
 ## [1.3.3] - 2026-09-10
 
 ### Added

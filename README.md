@@ -40,13 +40,13 @@ double-click **`Launcher.exe`**, which skips the menu and generates directly.
 Either way, it picks a random image, builds the mod, and optionally launches
 Sims 4 for you.
 
-For fully unattended use (scripts, other launchers, CI), pass `--generate`
-directly — `Launcher.bat --generate` / `./Launcher.sh --generate` — which
-skips the menu and, when the game isn't being launched, the final
-"press any key to close" prompt too, so it needs no input and exits as
-soon as it's done. Add `--force-launch` to also launch the game regardless
-of `launch_game` in `config.json`. This is exactly how
-`Launcher.exe`/`TS4_x64.exe` invoke it.
+By default (`non_interactive: true`) it never blocks on the final
+"press any key to close" prompt, so it's safe to drive unattended from
+scripts, other launchers, or CI. For fully unattended use, pass
+`--generate` directly — `Launcher.bat --generate` / `./Launcher.sh
+--generate` — which also skips the menu. Add `--force-launch` to also
+launch the game regardless of `launch_game` in `config.json`. This is
+exactly how `Launcher.exe`/`TS4_x64.exe` invoke it.
 
 ---
 
@@ -61,6 +61,7 @@ All settings live in `config.json`. Only `images_folder` and `mods_folder` are r
 | `is_vertical` | | `true` | When `true`, combines **2 portrait images** side-by-side into one landscape loading screen |
 | `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image. Can also be run standalone via `Launcher.bat`/`Launcher.sh` (option 2) or `python src/images_renamer.py` |
 | `launch_game` | | `true` | Automatically launch Sims 4 after generating the mod |
+| `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt (only shown when `launch_game` is `false`) — set to `false` if you want that pause when running the interactive menu |
 | `launch_via_steam` | | `true` | Launch via Steam (`steam://rungameid/...`) |
 | `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
 

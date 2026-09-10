@@ -2,4 +2,6 @@ __pycache__/
 .pytest_cache/
 config.json
 *.exe
+/Sims4RandomLoadingScreen
+/TS4_x64
 .curseclient

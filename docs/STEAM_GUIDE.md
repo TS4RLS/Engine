@@ -17,16 +17,22 @@ Each of these also has an `_alt` version (e.g. `cover_alt.png`) that uses
 the CurseForge-launcher branding (`assets/alt_icon.*`) instead of the
 standard one. Use whichever matches the shortcut you're skinning:
 
-- Standard set → `Launcher.exe` / `Launcher` shortcut
-- `_alt` set → `TS4_x64.exe` (CurseForge pre-launch) shortcut
+- Standard set → `Sims4RandomLoadingScreen`/`.exe` shortcut
+- `_alt` set → `TS4_x64`/`.exe` (CurseForge pre-launch) shortcut
+
+Don't have the source repo? The app's **About** tab has a
+**Save Steam artwork (.zip)...** button that saves this same set anywhere
+you like.
 
 ## Applying the artwork
 
-1. Add the executable (`Launcher.exe` or `TS4_x64.exe`) to Steam as a
-   non-Steam game: **Steam → Games → Add a Non-Steam Game to My Library**.
+1. Add the executable (`Sims4RandomLoadingScreen.exe` or `TS4_x64.exe`) to
+   Steam as a non-Steam game:
+   **Steam → Games → Add a Non-Steam Game to My Library**.
 2. In your Library, right-click the new entry → **Manage** →
    **Set custom artwork**, and upload the matching file from
-   `assets/steam/` for each slot (grid, hero, logo).
+   `assets/steam/` (or the zip from the About tab) for each slot
+   (grid, hero, logo).
 
 For the full walkthrough with screenshots, see this community guide:
 [Adding custom artwork to non-Steam games](https://steamcommunity.com/sharedfiles/filedetails/?id=3582792038).

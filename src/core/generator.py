@@ -4,28 +4,40 @@ Sims 4 Random Loading Screen Generator
 Picks a random image from your chosen folder, packages it as a valid
 Sims 4 loading screen mod (.package file), and drops it into your Mods folder.
 
-Run this script before launching the game. Each run picks a new random image.
-
-Requirements:
-  - Python 3.6+
-  - Pillow  (pip install Pillow)
-
-Configuration:
-  Copy config.example.json to config.json and fill in your paths.
+Callable API: load_config() / generate(cfg). main() is the CLI wrapper used
+when this script is run directly (dev convenience) — the GUI and cli/menu.py
+call generate() directly instead.
 """
 
-import json
 import os
+import sys
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+import json
 import random
 import struct
+import subprocess
 import time
 import zlib
-import sys
-import subprocess
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
+
+from src.common import paths
+from src.common.config_format import parse_jsonc
+from src.cli import cli_colors
+
+
+class GeneratorError(Exception):
+    """Raised for any user-facing failure generate()/load_config() hits."""
 
 
 def _ensure_dependencies():
+    if paths.is_frozen():
+        return  # a frozen build must already bundle Pillow
     import importlib.util
     if importlib.util.find_spec("PIL") is None:
         print(" Pillow not found — installing...")
@@ -39,71 +51,9 @@ def _ensure_dependencies():
 
 _ensure_dependencies()
 
-# ── CONFIGURATION ─────────────────────────────────────────────────────────────
-
-def _load_config() -> dict:
-    root_dir    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    config_path = os.path.join(root_dir, "config.json")
-
-    if not os.path.isfile(config_path):
-        example_path = os.path.join(root_dir, "config.example.json")
-        print("[ERROR] config.json not found.")
-        print("  Copy config.example.json to config.json and fill in your paths:")
-        print(f'    copy "{example_path}" "{config_path}"')
-        sys.exit(1)
-
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            text = f.read()
-        # Allow single backslashes in paths — protect existing \\ pairs, then
-        # double up any lone \, then restore the protected pairs.
-        _ph = "\x00"
-        text = text.replace("\\\\", _ph)
-        text = text.replace("\\", "\\\\")
-        text = text.replace(_ph, "\\\\")
-        cfg = json.loads(text)
-    except json.JSONDecodeError as e:
-        print(f"[ERROR] config.json contains invalid JSON: {e}")
-        sys.exit(1)
-
-    for key in ("images_folder", "mods_folder"):
-        if key not in cfg:
-            print(f"[ERROR] config.json is missing required key: '{key}'")
-            print("  See config.example.json for the full list of settings.")
-            sys.exit(1)
-
-    return cfg
-
-
-_cfg = _load_config()
-
-IMAGES_FOLDER       = _cfg["images_folder"]
-MODS_FOLDER         = _cfg["mods_folder"]
-IS_VERTICAL         = _cfg.get("is_vertical", True)
-LAUNCH_GAME         = _cfg.get("launch_game", True) or "--force-launch" in sys.argv
-NON_INTERACTIVE     = _cfg.get("non_interactive", True) or "--generate" in sys.argv
-GAME_EXE            = _cfg.get("game_exe", "")
-LAUNCH_VIA_STEAM    = _cfg.get("launch_via_steam", True)
-TARGET_WIDTH        = _cfg.get("target_width", 1920)
-TARGET_HEIGHT       = _cfg.get("target_height", 1080)
-RENAME_FILES        = _cfg.get("rename_files", False)
-
-# ── END CONFIGURATION ──────────────────────────────────────────────────────────
-
-_ROOT_DIR           = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATE_PACKAGE    = os.path.join(_ROOT_DIR, "assets", "template.package")
-
-
-def _get_version() -> str:
-    try:
-        with open(os.path.join(_ROOT_DIR, "VERSION.md"), "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except OSError:
-        return "?"
-
-
+TEMPLATE_PACKAGE = paths.resource_path(os.path.join("assets", "template.package"))
 OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
-SIMS4_STEAM_APP_ID  = "1222670"
+SIMS4_STEAM_APP_ID = "1222670"
 
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff"}
 
@@ -115,6 +65,41 @@ _RESOURCE_GROUP    = 0x00000000
 _RESOURCE_INSTANCE = 0x432D1D2ADDFFC6D8
 
 
+def _get_version() -> str:
+    try:
+        with open(os.path.join(_ROOT, "VERSION.md"), "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return "?"
+
+
+# ── CONFIGURATION ─────────────────────────────────────────────────────────────
+
+def load_config() -> dict:
+    config_path = paths.resolve_config_path()
+
+    if not os.path.isfile(config_path):
+        raise GeneratorError(
+            "config.json not found.\n"
+            "  Run the quick setup wizard (Configure settings), or see config.example.json."
+        )
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = parse_jsonc(f.read())
+    except json.JSONDecodeError as e:
+        raise GeneratorError(f"config.json contains invalid JSON: {e}")
+
+    for key in ("images_folder", "mods_folder"):
+        if key not in cfg:
+            raise GeneratorError(f"config.json is missing required key: '{key}'")
+
+    return cfg
+
+
+# ── END CONFIGURATION ──────────────────────────────────────────────────────────
+
+
 # ─── Image helpers ────────────────────────────────────────────────────────────
 
 def _import_pil():
@@ -122,9 +107,7 @@ def _import_pil():
         from PIL import Image
         return Image
     except ImportError:
-        print("\n[ERROR] Pillow is not installed.")
-        print("  Run:  pip install Pillow")
-        sys.exit(1)
+        raise GeneratorError("Pillow is not installed.\n  Run:  pip install Pillow")
 
 
 def find_images(folder: str) -> list:
@@ -137,7 +120,7 @@ def find_images(folder: str) -> list:
 
 
 def _fit_and_crop(img, width: int, height: int):
-    """Resize preserving aspect ratio, then centre-crop to exactly width×height."""
+    """Resize preserving aspect ratio, then centre-crop to exactly width x height."""
     img_ratio    = img.width / img.height
     target_ratio = width / height
     if img_ratio > target_ratio:
@@ -222,9 +205,10 @@ def _find_image_block_offset(gfx: bytearray) -> int:
 def get_template_image_size() -> tuple:
     """Return (width, height) of the image stored in the template package."""
     if not os.path.isfile(TEMPLATE_PACKAGE):
-        print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure template.package is inside the assets folder.")
-        sys.exit(1)
+        raise GeneratorError(
+            f"Template package not found:\n  {TEMPLATE_PACKAGE}\n"
+            "  Ensure template.package is inside the assets folder."
+        )
     gfx     = _load_template_gfx(TEMPLATE_PACKAGE)
     img_off = _find_image_block_offset(gfx)
     # Bytes 7-8 = width, bytes 9-10 = height (relative to img_off)
@@ -251,9 +235,10 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
       [zlib-compressed ARGB data]
     """
     if not os.path.isfile(TEMPLATE_PACKAGE):
-        print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure template.package is inside the assets folder.")
-        sys.exit(1)
+        raise GeneratorError(
+            f"Template package not found:\n  {TEMPLATE_PACKAGE}\n"
+            "  Ensure template.package is inside the assets folder."
+        )
 
     gfx = _load_template_gfx(TEMPLATE_PACKAGE)
 
@@ -329,73 +314,87 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
     return header + outer_zlib + index_block
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# ─── Generate ─────────────────────────────────────────────────────────────────
 
-def main():
-    banner_width = 69
-    print("=" * banner_width)
-    print("Sims 4 Random Loading Screen - Package Generator".center(banner_width))
-    print(f"v{_get_version()}".center(banner_width))
-    print("Built & Maintained by StuxieDev".center(banner_width))
-    print("=" * banner_width)
+@dataclass
+class GenerateResult:
+    output_path: str
+    launched: bool
+    warning: Optional[str] = None
 
-    if not os.path.isdir(IMAGES_FOLDER):
-        print(f"\n[ERROR] Images folder not found:\n  {IMAGES_FOLDER}")
-        print("  Update 'images_folder' in config.json.")
-        sys.exit(1)
 
-    if RENAME_FILES:
-        print("\nRenaming images...")
-        from images_renamer import rename_and_convert
-        rename_and_convert(IMAGES_FOLDER)
+def generate(cfg: dict, force_launch: bool = False, log=print) -> GenerateResult:
+    """Generate a new random loading screen package per cfg and write it to
+    the Mods folder. Raises GeneratorError on any user-facing failure."""
+    images_folder    = cfg["images_folder"]
+    mods_folder      = cfg["mods_folder"]
+    is_vertical      = cfg.get("is_vertical", True)
+    launch_game      = cfg.get("launch_game", True) or force_launch
+    rename_files     = cfg.get("rename_files", False)
+    game_exe         = cfg.get("game_exe", "")
+    launch_via_steam = cfg.get("launch_via_steam", True)
 
-    if not os.path.isdir(MODS_FOLDER):
-        print(f"\n[ERROR] Mods folder not found:\n  {MODS_FOLDER}")
-        print("  Update 'mods_folder' in config.json.")
-        sys.exit(1)
+    if not os.path.isdir(images_folder):
+        raise GeneratorError(
+            f"Images folder not found:\n  {images_folder}\n"
+            "  Update 'images_folder' in config.json."
+        )
 
-    output_folder = os.path.join(MODS_FOLDER, "RandomLoadingScreen")
+    if rename_files:
+        log("\nRenaming images...")
+        from src.core.renamer import rename_images
+        ok, failed = rename_images(images_folder, log=log)
+        log(f"  Renamed {ok} file(s)" + (f", {failed} skipped." if failed else "."))
+
+    if not os.path.isdir(mods_folder):
+        raise GeneratorError(
+            f"Mods folder not found:\n  {mods_folder}\n"
+            "  Update 'mods_folder' in config.json."
+        )
+
+    output_folder = os.path.join(mods_folder, "RandomLoadingScreen")
     os.makedirs(output_folder, exist_ok=True)
 
-    images = find_images(IMAGES_FOLDER)
+    images = find_images(images_folder)
     if not images:
-        print(f"\n[ERROR] No images found in:\n  {IMAGES_FOLDER}")
-        print(f"  Supported formats: {', '.join(SUPPORTED_EXTENSIONS)}")
-        sys.exit(1)
+        raise GeneratorError(
+            f"No images found in:\n  {images_folder}\n"
+            f"  Supported formats: {', '.join(SUPPORTED_EXTENSIONS)}"
+        )
 
-    print(f"\nFound {len(images)} image(s).")
+    log(f"\nFound {len(images)} image(s).")
 
     # Use the exact dimensions the template stores so the game renders correctly.
     img_w, img_h = get_template_image_size()
-    print(f"Template image size: {img_w}×{img_h}")
+    log(f"Template image size: {img_w}x{img_h}")
 
     try:
-        if IS_VERTICAL:
+        if is_vertical:
             n = 2
             if len(images) >= n:
                 chosen = random.sample(images, n)
             else:
                 chosen = [random.choice(images) for _ in range(n)]
-            print(f"Selected (vertical mode, combining {n}):")
+            log(f"Selected (vertical mode, combining {n}):")
             for c in chosen:
-                print(f"  {os.path.basename(c)}")
-            print(f"Processing {n} images → {img_w}×{img_h} combined...")
+                log(f"  {os.path.basename(c)}")
+            log(f"Processing {n} images -> {img_w}x{img_h} combined...")
             argb_bytes = prepare_combined_image(chosen, img_w, img_h)
         else:
             chosen = random.choice(images)
-            print(f"Selected: {os.path.basename(chosen)}")
-            print(f"Processing image ({img_w}×{img_h})...")
+            log(f"Selected: {os.path.basename(chosen)}")
+            log(f"Processing image ({img_w}x{img_h})...")
             argb_bytes = prepare_single_image(chosen, img_w, img_h)
+    except GeneratorError:
+        raise
     except Exception as e:
-        print(f"\n[ERROR] Failed to process image(s): {e}")
-        sys.exit(1)
+        raise GeneratorError(f"Failed to process image(s): {e}")
 
-    print("Building .package file...")
+    log("Building .package file...")
     try:
         package_bytes = build_package(argb_bytes, img_w, img_h)
     except Exception as e:
-        print(f"\n[ERROR] Failed to build package: {e}")
-        sys.exit(1)
+        raise GeneratorError(f"Failed to build package: {e}")
 
     output_path = os.path.join(output_folder, OUTPUT_PACKAGE_NAME)
     if os.path.exists(output_path):
@@ -404,34 +403,65 @@ def main():
     with open(output_path, "wb") as f:
         f.write(package_bytes)
 
-    print(f"Written to: {output_path}")
-    print(f"Package size: {len(package_bytes) / 1024:.1f} KB")
+    log(f"Written to: {output_path}")
+    log(f"Package size: {len(package_bytes) / 1024:.1f} KB")
 
-    LAUNCH_MSG = "The Sims 4 will now launch with your new random loading screen." if LAUNCH_GAME else "Random loading screen package created. Launch the game to see it in action."
-
-    if LAUNCH_GAME:
-        print("\nLaunching Sims 4...")
-        if LAUNCH_VIA_STEAM:
-            subprocess.Popen(
-                ["start", f"steam://rungameid/{SIMS4_STEAM_APP_ID}"],
-                shell=True
-            )
-        elif os.path.isfile(GAME_EXE):
-            subprocess.Popen([GAME_EXE])
+    launched = False
+    warning = None
+    if launch_game:
+        log("\nLaunching Sims 4...")
+        if launch_via_steam:
+            subprocess.Popen(["start", f"steam://rungameid/{SIMS4_STEAM_APP_ID}"], shell=True)
+            launched = True
+        elif os.path.isfile(game_exe):
+            subprocess.Popen([game_exe])
+            launched = True
         else:
-            print(f"[WARNING] Game executable not found: {GAME_EXE}")
-            print("  Set GAME_EXE or LAUNCH_VIA_STEAM in the script settings.")
+            warning = f"Game executable not found: {game_exe}"
+
+    return GenerateResult(output_path=output_path, launched=launched, warning=warning)
+
+
+# ─── Main (CLI wrapper for direct/dev invocation) ────────────────────────────
+
+def main():
+    print(cli_colors.banner(
+        "Sims 4 Random Loading Screen - Package Generator",
+        f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
+    ))
+
+    force_launch = "--force-launch" in sys.argv
+    non_interactive_flag = "--generate" in sys.argv
+
+    try:
+        cfg = load_config()
+        non_interactive = cfg.get("non_interactive", True) or non_interactive_flag
+        result = generate(cfg, force_launch=force_launch)
+    except GeneratorError as e:
+        print("\n" + cli_colors.error(str(e)))
+        sys.exit(1)
+
+    if result.warning:
+        print(cli_colors.warning(result.warning))
+        print("  Set game_exe or launch_via_steam in config.json.")
+
+    launch_game = cfg.get("launch_game", True) or force_launch
+    launch_msg = (
+        "The Sims 4 will now launch with your new random loading screen."
+        if result.launched else
+        "Random loading screen package created. Launch the game to see it in action."
+    )
 
     print("\nDone!")
-    print(LAUNCH_MSG)
+    print(launch_msg)
     print("=" * 69)
 
-    if LAUNCH_GAME:
+    if launch_game:
         for i in range(15, 0, -1):
             print(f"\r  Closing in {i}s...  ", end="", flush=True)
             time.sleep(1)
         print()
-    elif not NON_INTERACTIVE:
+    elif not non_interactive:
         print("\n  Press any key to close...")
         try:
             import msvcrt

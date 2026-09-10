@@ -1,5 +1,5 @@
 """
-Unit tests for src/executable_builder.py.
+Unit tests for src/build/executable_builder.py.
 
 Only the pure config-loading logic is tested here. Actually invoking
 ensure_pyinstaller()/_build_exe()/build() would shell out to PyInstaller,
@@ -9,7 +9,7 @@ logic, so it is intentionally left uncovered (see report).
 """
 import pytest
 
-import executable_builder as builder
+from src.build import executable_builder as builder
 
 
 def _patch_script_dir(monkeypatch, tmp_path):
@@ -88,3 +88,20 @@ def test_icon_args_missing_file_returns_empty(tmp_path, monkeypatch):
     monkeypatch.setattr(builder, "IS_WINDOWS", True)
     monkeypatch.setattr(builder, "IS_MACOS", False)
     assert builder._icon_args("icon") == []
+
+
+# ─── _should_build_curseforge ───────────────────────────────────────────────
+
+def test_should_build_curseforge_noninteractive_uses_default():
+    assert builder._should_build_curseforge(True, interactive=False) is True
+    assert builder._should_build_curseforge(False, interactive=False) is False
+
+
+def test_should_build_curseforge_interactive_blank_answer_keeps_default():
+    assert builder._should_build_curseforge(True, interactive=True, ask=lambda _: "") is True
+    assert builder._should_build_curseforge(False, interactive=True, ask=lambda _: "") is False
+
+
+def test_should_build_curseforge_interactive_answer_overrides_default():
+    assert builder._should_build_curseforge(False, interactive=True, ask=lambda _: "y") is True
+    assert builder._should_build_curseforge(True, interactive=True, ask=lambda _: "n") is False

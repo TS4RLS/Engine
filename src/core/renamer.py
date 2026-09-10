@@ -1,23 +1,31 @@
 """
-Renames every image in the images folder to a random 32-character alphanumeric
+Renames every image in a folder to a random 32-character alphanumeric
 filename and converts it to JPEG format.
 
-Run standalone:
-    python src/images_renamer.py
-
-Or called automatically by package_generator.py when rename_files is true in config.json.
+Callable API: rename_images(folder). Called automatically by
+core/generator.py's generate() when rename_files is true in config.json,
+or standalone via the CLI menu / this script's __main__.
 """
 
-import json
 import os
+import sys
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 import random
 import string
 import subprocess
-import sys
 from pathlib import Path
+
+from src.common import paths
+from src.cli import cli_colors
 
 
 def _ensure_dependencies():
+    if paths.is_frozen():
+        return
     import importlib.util
     if importlib.util.find_spec("PIL") is None:
         print(" Pillow not found — installing...")
@@ -39,9 +47,8 @@ def _import_pil():
         from PIL import Image
         return Image
     except ImportError:
-        print("\n[ERROR] Pillow is not installed.")
-        print("  Run:  pip install Pillow")
-        sys.exit(1)
+        from src.core.generator import GeneratorError
+        raise GeneratorError("Pillow is not installed.\n  Run:  pip install Pillow")
 
 
 def _random_name() -> str:
@@ -55,8 +62,9 @@ def _unique_jpg_path(folder: str) -> str:
             return path
 
 
-def rename_and_convert(images_folder: str) -> None:
-    """Rename all images in images_folder to random 32-char names and convert to JPEG."""
+def rename_images(images_folder: str, log=print) -> tuple:
+    """Rename all images in images_folder to random 32-char names and
+    convert them to JPEG. Returns (ok_count, failed_count)."""
     Image = _import_pil()
 
     # Collect all paths upfront so in-progress renames don't affect the walk.
@@ -67,10 +75,10 @@ def rename_and_convert(images_folder: str) -> None:
                 sources.append(os.path.join(root, name))
 
     if not sources:
-        print(f"  No images found in: {images_folder}")
-        return
+        log(f"  No images found in: {images_folder}")
+        return 0, 0
 
-    print(f"  Renaming {len(sources)} image(s)...")
+    log(f"  Renaming {len(sources)} image(s)...")
     ok = 0
     failed = 0
     for src in sources:
@@ -81,49 +89,40 @@ def rename_and_convert(images_folder: str) -> None:
             os.remove(src)
             ok += 1
         except Exception as exc:
-            print(f"  [WARNING] Could not process {os.path.basename(src)}: {exc}")
+            log("  " + cli_colors.warning(f"Could not process {os.path.basename(src)}: {exc}"))
             failed += 1
 
-    print(f"  Renamed {ok} file(s)" + (f", {failed} skipped." if failed else "."))
-
-
-def _root_dir() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return ok, failed
 
 
 def _get_version() -> str:
     try:
-        with open(os.path.join(_root_dir(), "VERSION.md"), "r", encoding="utf-8") as f:
+        with open(os.path.join(_ROOT, "VERSION.md"), "r", encoding="utf-8") as f:
             return f.read().strip()
     except OSError:
         return "?"
 
 
-def _load_images_folder() -> str:
-    config_path = os.path.join(_root_dir(), "config.json")
-    if not os.path.isfile(config_path):
-        print("[ERROR] config.json not found.")
-        sys.exit(1)
-    with open(config_path, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    if "images_folder" not in cfg:
-        print("[ERROR] config.json is missing 'images_folder'.")
-        sys.exit(1)
-    return cfg["images_folder"]
-
-
 if __name__ == "__main__":
-    banner_width = 69
-    print("=" * banner_width)
-    print("Sims 4 Random Loading Screen - Images Renamer".center(banner_width))
-    print(f"v{_get_version()}".center(banner_width))
-    print("Built & Maintained by StuxieDev".center(banner_width))
-    print("=" * banner_width)
+    from src.core.generator import GeneratorError, load_config
 
-    folder = _load_images_folder()
-    if not os.path.isdir(folder):
-        print(f"[ERROR] Images folder not found: {folder}")
+    print(cli_colors.banner(
+        "Sims 4 Random Loading Screen - Images Renamer",
+        f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
+    ))
+
+    try:
+        cfg = load_config()
+    except GeneratorError as e:
+        print(cli_colors.error(str(e)))
         sys.exit(1)
+
+    folder = cfg["images_folder"]
+    if not os.path.isdir(folder):
+        print(cli_colors.error(f"Images folder not found: {folder}"))
+        sys.exit(1)
+
     print(f"Images folder: {folder}")
-    rename_and_convert(folder)
+    ok, failed = rename_images(folder)
+    print(f"  Renamed {ok} file(s)" + (f", {failed} skipped." if failed else "."))
     print("Done.")

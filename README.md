@@ -8,100 +8,83 @@ Automatically picks a random image from a folder and installs it as your Sims 4 
 
 ---
 
-## Requirements
+## Download
 
-- **Python 3.6+** — [python.org/downloads](https://www.python.org/downloads/) *(tick "Add Python to PATH" during install)*
-- **Pillow** — installed automatically on first run, or manually: `pip install Pillow`
+Grab the latest **`Sims4RandomLoadingScreen`** executable from the
+[Releases page](https://github.com/StuxieDev/Sims-4-Random-Loading-Screen/releases) —
+it's a single self-contained file, nothing else to install. Double-click it
+for a GUI, or run it from a terminal with `--cli` for a text menu.
+
+- **First run** walks you through a quick setup wizard (images folder, Mods
+  folder, and a handful of optional settings) and saves it for you — no
+  manual config file editing required.
+- Settings are stored per-user (Windows: `%APPDATA%`, macOS:
+  `~/Library/Application Support`, Linux: `~/.config`), so the app works
+  the same no matter where you put the executable.
 
 ---
 
-## Setup
+## Using it
 
-**1. Configure your paths**
+**1. Add your images**
 
-Copy `config.example.json` to `config.json` and fill in the two required fields:
+Drop PNG, JPG, BMP, WebP, or TIFF images into the images folder you set up. Sub-folders are scanned automatically. One image is enough; the more you have, the more variety you get.
 
-```json
-{
-  "images_folder": "C:/Users/YourName/Pictures/The Sims 4 Loading Screens",
-  "mods_folder":   "C:/Users/YourName/Documents/Electronic Arts/The Sims 4/Mods"
-}
-```
+**2. Run before launching the game**
 
-**2. Add your images**
+- **GUI**: double-click the executable, go to the **Actions** tab, click
+  **Generate loading screen**.
+- **Text menu**: run it with `--cli` and choose **1) Generate**.
+- **Unattended** (scripts, other launchers, a Steam shortcut): run it with
+  `--generate` (add `--force-launch` to always launch the game regardless
+  of the `launch_game` setting). It never blocks waiting for a keypress.
 
-Drop PNG, JPG, BMP, WebP, or TIFF images into your `images_folder`. Sub-folders are scanned automatically. One image is enough; the more you have, the more variety you get.
-
-**3. Run before launching the game**
-
-Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) and
-choose **1) Generate loading screen** from the menu — or, once built, just
-double-click **`Launcher.exe`**, which skips the menu and generates directly.
-Either way, it picks a random image, builds the mod, and optionally launches
-Sims 4 for you.
-
-By default (`non_interactive: true`) it never blocks on the final
-"press any key to close" prompt, so it's safe to drive unattended from
-scripts, other launchers, or CI. For fully unattended use, pass
-`--generate` directly — `Launcher.bat --generate` / `./Launcher.sh
---generate` — which also skips the menu. Add `--force-launch` to also
-launch the game regardless of `launch_game` in `config.json`. This is
-exactly how `Launcher.exe`/`TS4_x64.exe` invoke it.
+Either way, it picks a random image, builds the mod, and optionally launches Sims 4 for you.
 
 ---
 
 ## Configuration
 
-All settings live in `config.json`. Only `images_folder` and `mods_folder` are required — everything else has a default.
+Use the **Settings** tab (GUI) or the **Configure settings** option
+(text menu) to change anything — both read and write the same config file.
+Only `images_folder` and `mods_folder` are required; everything else has a
+default.
 
 | Key | Required | Default | Description |
 |---|---|---|---|
 | `images_folder` | ✓ | — | Folder containing your source images |
 | `mods_folder` | ✓ | — | Your Sims 4 Mods folder |
 | `is_vertical` | | `true` | When `true`, combines **2 portrait images** side-by-side into one landscape loading screen |
-| `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image. Can also be run standalone via `Launcher.bat`/`Launcher.sh` (option 2) or `python src/images_renamer.py` |
+| `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image |
 | `launch_game` | | `true` | Automatically launch Sims 4 after generating the mod |
-| `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt (only shown when `launch_game` is `false`) — set to `false` if you want that pause when running the interactive menu |
+| `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt (only shown when `launch_game` is `false`) |
 | `launch_via_steam` | | `true` | Launch via Steam (`steam://rungameid/...`) |
 | `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
-
-> **`config.json` is gitignored** — your personal paths are never committed.
+| `target_width` / `target_height` | | `1920` / `1080` | Loading screen output size |
+| `create_curseforge_version` | | `false` | Whether `src/build/executable_builder.py` also builds the CurseForge (`TS4_x64`) executable — dev/build-time only |
 
 ### Vertical mode
 
-When `is_vertical` is `true`, the script randomly picks **two portrait-oriented images** and stitches them side-by-side into a single landscape loading screen. Use tall/portrait photos for best results. Set to `false` to use one image directly.
+When `is_vertical` is `true`, the app randomly picks **two portrait-oriented images** and stitches them side-by-side into a single landscape loading screen. Use tall/portrait photos for best results. Set to `false` to use one image directly.
 
 ---
 
-## Steam launcher (.exe)
+## CurseForge pre-launch script
 
-To add the tool to Steam as a non-Steam game, build a standalone executable
-via `Launcher.bat`/`Launcher.sh` (option 3) or directly:
-
-```
-python src/executable_builder.py
-```
-
-This produces **`Launcher.exe`** (Windows) or plain **`Launcher`** (macOS/Linux)
-in the project root, using `assets/icon.ico`/`icon.icns`. It just calls
-`Launcher.bat`/`Launcher.sh` next to it in non-interactive mode — keep them
-together. PyInstaller is installed automatically if needed. PyInstaller can't
-cross-compile, so run the builder on each platform you want a native build
-for.
-
-If `create_curseforge_version` is `true` in `config.json`, a second
-executable, **`TS4_x64`** (`TS4_x64.exe` on Windows), is also built using
-`assets/alt_icon.ico`/`.icns` — the name mirrors Sims 4's own game
-executable on each platform. It behaves identically but always launches the
-game, for use as a CurseForge pre-launch script.
+A copy of the same executable, renamed to **`TS4_x64`**/`TS4_x64.exe`
+(mirroring Sims 4's own game executable), automatically generates a new
+loading screen and launches the game with no arguments needed — use it as
+your CurseForge pre-launch script. See
+[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for how to build it yourself.
 
 ---
 
 ## Steam artwork
 
 `assets/steam/` has a full set of custom Steam library artwork for the
-non-Steam-game shortcut — see **[STEAM_GUIDE.md](STEAM_GUIDE.md)** for the
-asset list and how to apply it.
+non-Steam-game shortcut — see **[docs/STEAM_GUIDE.md](docs/STEAM_GUIDE.md)**
+for the asset list and how to apply it, or use the **Save Steam artwork
+(.zip)...** button on the app's About tab if you don't have the source repo.
 
 ---
 
@@ -122,55 +105,49 @@ The output won't conflict with other mods as long as no other loading screen `.p
 
 | Problem | Fix |
 |---|---|
-| `config.json not found` | Copy `config.example.json` → `config.json` and fill in your paths |
-| `config.json missing required key` | Check `config.example.json` for required keys |
-| `[ERROR] Images folder not found` | Update `images_folder` in `config.json` |
-| `[ERROR] Mods folder not found` | Update `mods_folder` in `config.json` |
-| `[ERROR] Template package not found` | Ensure `assets/template.package` is present |
-| `[ERROR] No images found` | Check the folder path and that your files are PNG/JPG/BMP/WebP/TIFF |
+| `config.json not found` | Run the app — the setup wizard runs automatically the first time |
+| `config.json missing required key` | Use the Settings tab / Configure settings option to fill it in |
+| `Images folder not found` | Update `images_folder` in Settings |
+| `Mods folder not found` | Update `mods_folder` in Settings |
+| `No images found` | Check the folder path and that your files are PNG/JPG/BMP/WebP/TIFF |
 | Loading screen unchanged in-game | Delete `localthumbcache.package` from your Mods folder, then relaunch |
 | Still showing blue loading screen | Remove any other loading screen `.package` from your Mods folder |
-| Python not found | Install Python and tick "Add to PATH" |
 
 ---
 
-## Testing
+## Development
 
-Unit tests cover the pure logic in the Python scripts (image discovery,
-resizing/cropping, ARGB packing, `.package` splicing, config parsing, and
-file renaming) using temporary directories — no test touches your real
-`config.json`, images, Mods folder, or the game itself.
+This section is for contributors running from source — end users should
+just download the executable above.
 
-```
-pip install -r requirements.txt
-pytest -v
-```
+- **Requirements**: Python 3.6+, `pip install -r requirements.txt`
+  (`Pillow`/`PyInstaller` are also installed automatically if missing).
+- Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) for
+  a small dev menu: open the app, build the executable(s), or run the test
+  suite.
+- `python src/app.py` (GUI), `python src/app.py --cli` (text menu), or
+  `python src/app.py --generate [--force-launch]` (headless) run the app
+  directly without building anything.
+- `python src/build/executable_builder.py` builds
+  `Sims4RandomLoadingScreen`(`.exe`) and, if `create_curseforge_version` is
+  `true` in `config.json`, `TS4_x64`(`.exe`) too. PyInstaller can't
+  cross-compile, so build on each platform you want a native executable
+  for.
+- `pytest -v` runs the test suite (`.github/workflows/ci.yml` runs the same
+  on every push/PR).
 
-A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the same suite
-on every push and pull request.
+See **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** for the full project
+layout and release flow.
 
 ---
-
-## Project layout
-
-```
-Launcher.bat / Launcher.sh  Interactive CLI entry point (root)
-src/
-  package_generator.py      Generates the loading screen mod
-  images_renamer.py         Renames/converts images to JPEG
-  executable_builder.py     Builds the standalone executable(s)
-assets/                     Icons, logo, template.package
-  steam/                    Steam library artwork (see STEAM_GUIDE.md)
-config.json                 Your personal settings (gitignored)
-```
 
 ## Do not rename or remove
 
 These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
-- `icon.ico` / `icon.icns` — icon embedded into `Launcher.exe`/`Launcher` at build time
-- `alt_icon.ico` / `alt_icon.icns` — icon embedded into `TS4_x64`/`TS4_x64.exe` at build time
+- `icon.ico` / `icon.icns` / `icon.png` — icon for the main app
+- `alt_icon.ico` / `alt_icon.icns` / `alt_icon.png` — icon for the `TS4_x64` build and the GUI's light-mode branding
 
 ---
 

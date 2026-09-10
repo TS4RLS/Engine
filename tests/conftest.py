@@ -1,24 +1,20 @@
 """
 Shared pytest setup.
 
-The scripts under test load ``config.json`` (their real, user-specific
-configuration) as soon as they are imported. That file is gitignored, so a
-fresh checkout (e.g. CI) won't have one. We create a throwaway config.json
-from config.example.json ONLY if one doesn't already exist -- an existing
-config.json (the user's real one) is never touched or overwritten.
+The project root (parent of tests/) is put on sys.path so tests can import
+the `src` package (`from src.core import generator`, etc.). Tests must
+never touch the real user's config — SIMS4_RLS_CONFIG_DIR is pointed at a
+throwaway temp directory for the whole test session, which
+common/paths.py::resolve_config_path() checks before any OS-specific or
+portable-mode location.
 """
 import os
-import shutil
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "src")
 
-if SRC not in sys.path:
-    sys.path.insert(0, SRC)
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
-_config_path = os.path.join(ROOT, "config.json")
-_example_path = os.path.join(ROOT, "config.example.json")
-
-if not os.path.isfile(_config_path) and os.path.isfile(_example_path):
-    shutil.copy(_example_path, _config_path)
+os.environ["SIMS4_RLS_CONFIG_DIR"] = tempfile.mkdtemp(prefix="s4rls_test_config_")

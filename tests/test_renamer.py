@@ -1,5 +1,5 @@
 """
-Unit tests for src/images_renamer.py.
+Unit tests for src/core/renamer.py.
 
 All file operations run against tmp_path fixtures; nothing touches the
 user's real images_folder or config.json.
@@ -7,10 +7,9 @@ user's real images_folder or config.json.
 import os
 import string
 
-import pytest
 from PIL import Image
 
-import images_renamer as renamer
+from src.core import renamer
 
 
 # ─── _random_name ──────────────────────────────────────────────────────────
@@ -45,21 +44,23 @@ def test_unique_jpg_path_returns_free_name_first_try(tmp_path, monkeypatch):
     assert result == os.path.join(str(tmp_path), "onlyoption.jpg")
 
 
-# ─── rename_and_convert ────────────────────────────────────────────────────
+# ─── rename_images ──────────────────────────────────────────────────────
 
-def test_rename_and_convert_empty_folder_does_nothing(tmp_path, capsys):
-    renamer.rename_and_convert(str(tmp_path))
-    out = capsys.readouterr().out
-    assert "No images found" in out
+def test_rename_images_empty_folder_does_nothing(tmp_path):
+    logged = []
+    ok, failed = renamer.rename_images(str(tmp_path), log=logged.append)
+    assert (ok, failed) == (0, 0)
+    assert any("No images found" in line for line in logged)
     assert list(tmp_path.iterdir()) == []
 
 
-def test_rename_and_convert_renames_and_converts_to_jpeg(tmp_path):
+def test_rename_images_renames_and_converts_to_jpeg(tmp_path):
     Image.new("RGB", (10, 10), (255, 0, 0)).save(tmp_path / "one.png")
     Image.new("RGB", (10, 10), (0, 255, 0)).save(tmp_path / "two.bmp")
     (tmp_path / "notes.txt").write_text("keep me")
 
-    renamer.rename_and_convert(str(tmp_path))
+    ok, failed = renamer.rename_images(str(tmp_path), log=lambda *a, **k: None)
+    assert (ok, failed) == (2, 0)
 
     remaining = list(tmp_path.iterdir())
     names = [p.name for p in remaining]
@@ -79,53 +80,27 @@ def test_rename_and_convert_renames_and_converts_to_jpeg(tmp_path):
             assert img.format == "JPEG"
 
 
-def test_rename_and_convert_skips_corrupt_file_and_leaves_it_in_place(tmp_path, capsys):
+def test_rename_images_skips_corrupt_file_and_leaves_it_in_place(tmp_path):
     bad = tmp_path / "corrupt.png"
     bad.write_bytes(b"this is not a real image")
 
-    renamer.rename_and_convert(str(tmp_path))
+    logged = []
+    ok, failed = renamer.rename_images(str(tmp_path), log=logged.append)
 
-    out = capsys.readouterr().out
-    assert "skipped" in out
+    assert (ok, failed) == (0, 1)
     assert bad.exists()  # left untouched since conversion failed
     jpgs = [p for p in tmp_path.iterdir() if p.suffix == ".jpg"]
     assert jpgs == []
 
 
-def test_rename_and_convert_recurses_into_subfolders(tmp_path):
+def test_rename_images_recurses_into_subfolders(tmp_path):
     sub = tmp_path / "sub"
     sub.mkdir()
     Image.new("RGB", (5, 5), (1, 2, 3)).save(sub / "nested.png")
 
-    renamer.rename_and_convert(str(tmp_path))
+    ok, failed = renamer.rename_images(str(tmp_path), log=lambda *a, **k: None)
+    assert (ok, failed) == (1, 0)
 
     remaining = list(sub.iterdir())
     assert len(remaining) == 1
     assert remaining[0].suffix == ".jpg"
-
-
-# ─── _load_images_folder ───────────────────────────────────────────────────
-
-def _patch_script_dir(monkeypatch, tmp_path):
-    monkeypatch.setattr(renamer, "__file__", str(tmp_path / "src" / "images_renamer.py"))
-
-
-def test_load_images_folder_missing_config_exits(tmp_path, monkeypatch):
-    _patch_script_dir(monkeypatch, tmp_path)
-    with pytest.raises(SystemExit):
-        renamer._load_images_folder()
-
-
-def test_load_images_folder_missing_key_exits(tmp_path, monkeypatch):
-    _patch_script_dir(monkeypatch, tmp_path)
-    (tmp_path / "config.json").write_text('{"mods_folder": "x"}', encoding="utf-8")
-    with pytest.raises(SystemExit):
-        renamer._load_images_folder()
-
-
-def test_load_images_folder_returns_value(tmp_path, monkeypatch):
-    _patch_script_dir(monkeypatch, tmp_path)
-    (tmp_path / "config.json").write_text(
-        '{"images_folder": "/some/path"}', encoding="utf-8"
-    )
-    assert renamer._load_images_folder() == "/some/path"

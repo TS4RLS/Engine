@@ -1,12 +1,24 @@
 {
+    // Folder containing your source images
     "images_folder": "C:/Users/YourName/Pictures/The Sims 4 Loading Screens",
+    // Your Sims 4 Mods folder
     "mods_folder": "C:/Users/YourName/Documents/Electronic Arts/The Sims 4/Mods",
+    // Combine 2 portrait images side-by-side into one loading screen
     "is_vertical": false,
-    "launch_game": false,
-    "non_interactive": true,
+    // Rename every image to a random name (and convert to JPEG) before picking
     "rename_files": false,
-    "game_exe": "C:/Program Files/EA Games/The Sims 4/Game/Bin/TS4_x64.exe",
+    // Automatically launch Sims 4 after generating the mod
+    "launch_game": false,
+    // Never block on the "press any key to close" prompt
+    "non_interactive": true,
+    // Launch via Steam (steam://rungameid/...) instead of game_exe
     "launch_via_steam": false,
+    // Direct path to TS4_x64.exe — only used when launch_via_steam is false
+    "game_exe": "C:/Program Files/EA Games/The Sims 4/Game/Bin/TS4_x64.exe",
+    // Loading screen output width
     "target_width": 1920,
-    "target_height": 1080
+    // Loading screen output height
+    "target_height": 1080,
+    // Also build the TS4_x64 CurseForge pre-launch executable
+    "create_curseforge_version": false
 }

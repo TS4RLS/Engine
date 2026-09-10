@@ -5,6 +5,66 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [2.0.0] - 2026-09-10
+
+A restructuring release: the app now ships as a single self-contained
+executable with a GUI and a CLI sharing the same logic, instead of a
+collection of scripts glued together by Launcher.bat/Launcher.sh.
+
+### Added
+- **GUI** (`src/gui.py`, tkinter) — Settings, Actions, and About tabs
+  covering everything the CLI does: generate, rename, configure, and (from
+  source) build/test. Automatically uses the main purple/orange branding
+  in dark mode and the green plumbob `alt_icon` branding in light mode
+  (best-effort OS dark-mode detection).
+- **CLI text menu** (`src/cli/menu.py`) — Generate / Rename / Configure /
+  Info / Exit, reachable via `--cli` on the app or the dev launcher.
+- **Single entry point** (`src/app.py`) — `python src/app.py` (GUI),
+  `--cli` (text menu), `--generate [--force-launch]` (headless). The exact
+  same build, renamed to `TS4_x64`/`TS4_x64.exe`, auto-detects its own
+  filename and behaves as `--generate --force-launch` with no arguments,
+  for the CurseForge pre-launch script use case.
+- **Per-user config location** — `config.json` now lives in the OS
+  user-data directory (`%APPDATA%`, `~/Library/Application Support`, or
+  `~/.config`) by default, resolved by `src/common/paths.py`. A
+  `config.json` already sitting next to the running app/script still takes
+  priority ("portable mode"), so existing from-source checkouts keep
+  working unchanged. `SIMS4_RLS_CONFIG_DIR` overrides the location
+  entirely (used by the test suite).
+- **Bundled assets** — the built executable bundles `template.package`,
+  the icon PNGs, and `assets/steam/` directly (no source tree required
+  alongside it). The About tab can save the Steam artwork set as a zip.
+- **Quick-setup wizard** (`src/cli/config_editor.py`) runs automatically
+  the first time no config is found, walking through every setting in
+  order (Enter accepts the default, or type a custom value).
+- **`config.json`/`config.example.json` are now JSONC** (JSON plus `//`
+  line comments) — every setting is documented inline
+  (`src/common/config_format.py`).
+- **Colored CLI output** across every script (`src/cli/cli_colors.py`).
+- **`non_interactive` config key** (default `true`) so unattended runs
+  never block on the "press any key to close" prompt.
+- Cross-platform CurseForge builds (macOS/Linux, not just Windows).
+
+### Changed
+- **`src/` reorganized** into `common/`, `core/`, `cli/`, and `build/`
+  subfolders by role, plus top-level `gui.py`/`app.py`.
+  `package_generator.py` → `core/generator.py`, `images_renamer.py` →
+  `core/renamer.py`; both now expose callable `generate()`/
+  `rename_images()` functions instead of running side effects at import
+  time, so the GUI/CLI/headless modes call them in-process.
+- **`STEAM_GUIDE.md`, `CONTRIBUTING.md`** moved to `docs/`.
+- **Executable names**: the old `Launcher.exe`/`RandomLoadingScreen.exe`
+  pair is replaced by a single `Sims4RandomLoadingScreen`(`.exe`).
+  `TS4_x64`(`.exe`) is unchanged in purpose.
+- `Launcher.bat`/`Launcher.sh` are now explicitly the from-source dev
+  entry point (open the app, build executables, run tests) — end users
+  should download the built executable instead.
+
+### Fixed
+- Non-ASCII arrow/multiplication-sign characters in generator log output
+  could crash on consoles using a legacy codepage (e.g. `UnicodeEncodeError`
+  on some Windows setups); replaced with ASCII equivalents.
+
 ## [1.3.4] - 2026-09-10
 
 ### Added

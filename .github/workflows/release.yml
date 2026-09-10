@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset_name: windows
+          - os: macos-latest
+            asset_name: macos
+          - os: ubuntu-latest
+            asset_name: linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Linux Tk support
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Enable the CurseForge (TS4_x64) build
+        shell: bash
+        run: echo '{"create_curseforge_version": true}' > config.json
+
+      - name: Build executables
+        shell: bash
+        run: python src/build/executable_builder.py
+
+      - name: Collect build artifacts
+        shell: bash
+        run: |
+          mkdir -p dist_out
+          for name in Sims4RandomLoadingScreen Sims4RandomLoadingScreen.exe TS4_x64 TS4_x64.exe; do
+            [ -f "$name" ] && cp "$name" dist_out/
+          done
+          ls -la dist_out
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.asset_name }}
+          path: dist_out/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifact folders
+        run: |
+          mkdir -p release_files
+          find artifacts -type f -exec cp {} release_files/ \;
+          ls -la release_files
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_files/*
+          generate_release_notes: true

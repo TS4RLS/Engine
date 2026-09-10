@@ -5,6 +5,16 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.1.2] - 2026-09-10
+
+### Fixed
+- `assets/logo.png` subtitle text ("The Sims 4 Random Loading Screen") is
+  now the same medium green as the title instead of a lighter tint — the
+  lighter tint was too washed out to read on light backgrounds, and a
+  darker tint tried in between disappeared entirely on dark backgrounds
+  (the website hero). This one color is the one already proven to read on
+  both.
+
 ## [4.1.1] - 2026-09-10
 
 ### Changed

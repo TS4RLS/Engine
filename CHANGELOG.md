@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.1.3] - 2026-09-10
+
+### Fixed
+- `assets/logo.png` subtitle was still too faint even at the matching
+  color from 4.1.2 — the light font weight itself was the remaining
+  problem. Switched to the regular weight (from the light one) and bumped
+  the size slightly.
+
 ## [4.1.2] - 2026-09-10
 
 ### Fixed

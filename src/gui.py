@@ -83,9 +83,7 @@ class App(tk.Tk):
         self.after(100, self._poll_log_queue)
 
     def _icon_basename(self, ext: str) -> str:
-        # Dark mode -> the main purple/orange branding; light mode -> the
-        # green plumbob "alt" branding.
-        return ("alt_icon" if not self.dark_mode else "icon") + ext
+        return ("icon_dark" if self.dark_mode else "icon_light") + ext
 
     def _set_window_icon(self):
         icon_path = paths.resource_path(os.path.join("assets", self._icon_basename(".png")))

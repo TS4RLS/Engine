@@ -5,6 +5,23 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [2.0.2] - 2026-09-10
+
+### Changed
+- **Brand palette corrected to green** — the v2.0.1 mark used purple as
+  the primary color; the actual TS4RLS theme is green throughout. Assets
+  renamed to reflect what they now represent: `icon.ico`/`.icns`/`.png` →
+  **`icon_dark.*`** (dark green, the app's default/dark-mode icon),
+  `alt_icon.*` → **`icon_light.*`** (a brighter green, used for the
+  `TS4_x64` build and the GUI's light-mode branding). Added
+  `logo_dark.png`/`logo_light.png` (the previous single `logo.png` had
+  dark text that was unreadable on a dark background) — the README now
+  picks between them automatically via `<picture>`/`prefers-color-scheme`.
+- **Icon redesign**: the "image" pips are now diamond-shaped (a die face
+  made of small diamond photo-icons) instead of rounded squares.
+- `assets/steam/*.png` renamed from `<name>`/`<name>_alt` to
+  `<name>_dark`/`<name>_light` and regenerated with the corrected palette.
+
 ## [2.0.1] - 2026-09-10
 
 ### Changed

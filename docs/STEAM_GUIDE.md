@@ -8,17 +8,17 @@ library grid requirements.
 
 | File | Size | Steam slot |
 |---|---|---|
-| `cover.png` | 600×900 | Portrait grid capsule |
-| `wide_cover.png` | 920×430 | Landscape grid capsule |
-| `background.png` | 3840×1240 | Library hero |
-| `logo.png` | 1280×720 | Library logo (transparent background) |
+| `cover_dark.png` / `cover_light.png` | 600×900 | Portrait grid capsule |
+| `wide_cover_dark.png` / `wide_cover_light.png` | 920×430 | Landscape grid capsule |
+| `background_dark.png` / `background_light.png` | 3840×1240 | Library hero |
+| `logo_dark.png` / `logo_light.png` | 1280×720 | Library logo (transparent background) |
 
-Each of these also has an `_alt` version (e.g. `cover_alt.png`) that uses
-the CurseForge-launcher branding (`assets/alt_icon.*`) instead of the
-standard one. Use whichever matches the shortcut you're skinning:
+Each slot has a **dark** version (using `assets/icon_dark.*`) and a
+**light** version (using `assets/icon_light.*`). Use whichever matches the
+shortcut you're skinning:
 
-- Standard set → `Sims4RandomLoadingScreen`/`.exe` shortcut
-- `_alt` set → `TS4_x64`/`.exe` (CurseForge pre-launch) shortcut
+- `_dark` set → `Sims4RandomLoadingScreen`/`.exe` shortcut
+- `_light` set → `TS4_x64`/`.exe` (CurseForge pre-launch) shortcut
 
 Don't have the source repo? The app's **About** tab has a
 **Save Steam artwork (.zip)...** button that saves this same set anywhere

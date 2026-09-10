@@ -1,12 +1,15 @@
 <p align="center">
-  <img src="assets/logo.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo_dark.png">
+    <img src="assets/logo_light.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
+  </picture>
 </p>
 
 # TS4RLS — The Sims 4 Random Loading Screen
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
 
-**Version 2.0.1** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 2.0.2** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -152,8 +155,9 @@ layout and release flow.
 These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
-- `icon.ico` / `icon.icns` / `icon.png` — icon for the main app
-- `alt_icon.ico` / `alt_icon.icns` / `alt_icon.png` — icon for the `TS4_x64` build and the GUI's light-mode branding
+- `icon_dark.ico` / `icon_dark.icns` / `icon_dark.png` — the app's default icon and the GUI's dark-mode branding
+- `icon_light.ico` / `icon_light.icns` / `icon_light.png` — icon for the `TS4_x64` build and the GUI's light-mode branding
+- `logo_dark.png` / `logo_light.png` — the wordmark logo (for dark/light-background contexts respectively)
 
 ---
 

@@ -43,8 +43,8 @@ IS_MACOS   = sys.platform == "darwin"
 _DATA_SEP = ";" if IS_WINDOWS else ":"
 _BUNDLED_DATA = [
     (os.path.join("assets", "template.package"), "assets"),
-    (os.path.join("assets", "icon.png"), "assets"),
-    (os.path.join("assets", "alt_icon.png"), "assets"),
+    (os.path.join("assets", "icon_dark.png"), "assets"),
+    (os.path.join("assets", "icon_light.png"), "assets"),
     (os.path.join("assets", "steam"), os.path.join("assets", "steam")),
 ]
 
@@ -173,14 +173,14 @@ def build():
 
     ensure_pyinstaller()
 
-    app_path = _build_exe(APP_EXE_NAME, "icon")
+    app_path = _build_exe(APP_EXE_NAME, "icon_dark")
     print(f"\nDone!  App ready: {app_path}")
     print("Double-click for the GUI, or run with --cli / --generate [--force-launch].")
 
     cfg = _load_build_config()
     default_cf = cfg.get("create_curseforge_version", False)
     if _should_build_curseforge(default_cf, sys.stdin.isatty()):
-        cf_path = _build_exe(CURSEFORGE_EXE_NAME, "alt_icon")
+        cf_path = _build_exe(CURSEFORGE_EXE_NAME, "icon_light")
         print(f"\nCurseForge version ready: {cf_path}")
         print("This always launches the game — use it as your CurseForge pre-launch script.")
 

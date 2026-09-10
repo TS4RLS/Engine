@@ -12,7 +12,6 @@ library grid requirements.
 | `wide_cover.png` | 920×430 | Landscape grid capsule |
 | `background.png` | 3840×1240 | Library hero |
 | `logo.png` | 1280×720 | Library logo (transparent background) |
-| `small_capsule.png` | 231×87 | Small/Big Picture capsule |
 
 Each of these also has an `_alt` version (e.g. `cover_alt.png`) that uses
 the CurseForge-launcher branding (`assets/alt_icon.*`) instead of the

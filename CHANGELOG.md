@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.3.1] - 2026-09-10
+
+### Removed
+- **`assets/steam/small_capsule.png`** — dropped from the Steam artwork set
+  (unused Steam library slot).
+
 ## [1.3.0] - 2026-09-10
 
 ### Added

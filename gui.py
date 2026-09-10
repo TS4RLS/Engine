@@ -1,7 +1,7 @@
 """
-TS4RLS — single entry point and desktop GUI. This is what gets built into
-the distributed executable; requires only the Python standard library
-(tkinter ships with Python).
+TS4RLS — single entry point and desktop GUI. Requires tkinter (ships with
+Python) and sv_ttk (a small pure-Tcl ttk theme, auto-installed below if
+missing).
 
 Run standalone:
     python gui.py              -> GUI
@@ -26,6 +26,28 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from src.common import app_state, paths
+
+
+def _ensure_dependencies():
+    if paths.is_frozen():
+        return  # a frozen build must already bundle sv_ttk
+    import importlib.util
+    if importlib.util.find_spec("sv_ttk") is None:
+        print("sv_ttk not found — installing...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "sv_ttk", "--quiet"],
+            stdout=subprocess.DEVNULL,
+        )
+        print("sv_ttk installed.")
+
+
+_ensure_dependencies()
+
+# sv_ttk ("Sun Valley") is a third-party ttk theme that reskins every stock
+# ttk widget with a real light/dark palette (flat buttons, modern look) --
+# something the built-in ttk themes (vista/clam/etc.) can't do on their
+# own. Matches the pattern used by TIGHC's own gui.py.
+import sv_ttk
 from src.cli import config_editor
 from src.cli.config_editor import SETTINGS, format_value
 from src.core.generator import (
@@ -42,6 +64,21 @@ STUXIEDEV_PROJECTS_URL = "https://projects.stuxie.dev"
 CHANGELOG_PATH = paths.resource_path("CHANGELOG.md")
 
 FOLDER_KEYS = {"images_folder", "mods_folder"}
+
+# Same green accent tokens as style.css's :root/[data-theme] blocks on the
+# website (--accent for each theme) -- a brighter green for the dark
+# theme, the deeper icon-face green for the light theme -- so the GUI's
+# links/highlights match the site instead of using an unrelated color.
+ACCENT_DARK = "#4fc264"
+ACCENT_LIGHT = "#2e7d32"
+DEFAULT_THEME = "dark"
+# A mid-gray that stays legible against both sv_ttk's light background
+# (near-white) and its dark background (near-black) -- avoids needing a
+# separate hint color per theme, same reasoning as TIGHC's HINT_COLOR.
+HINT_COLOR = "#8f8f8f"
+# --error-fg tokens from style.css, for the legacy-folder warning text.
+ERROR_DARK = "#d98c8c"
+ERROR_LIGHT = "#b3312f"
 
 DISCLAIMER_TITLE = "Before you start"
 DISCLAIMER_TEXT = (
@@ -88,6 +125,18 @@ class App(tk.Tk):
         self.logs = {}
         self.status_vars = {}
         self.buttons = {}
+        self._link_labels = []  # accent-colored labels re-colored on theme toggle
+        self._error_labels = []  # warning-colored labels re-colored on theme toggle
+        self._scrollable_canvases = []  # plain Tk canvases (see _build_scrollable_body) re-themed alongside changelog_text
+
+        self.theme = DEFAULT_THEME
+        sv_ttk.set_theme(self.theme, self)
+        self._apply_custom_style_layer()
+
+        top_bar = ttk.Frame(self)
+        top_bar.pack(fill="x", padx=8, pady=(8, 0))
+        self.theme_toggle_btn = ttk.Button(top_bar, text=self._theme_toggle_label(), command=self._on_toggle_theme)
+        self.theme_toggle_btn.pack(side="right")
 
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True, padx=8, pady=8)
@@ -104,6 +153,7 @@ class App(tk.Tk):
         self._build_build_tab()
         self._build_about_tab()
 
+        self._restyle_text_widgets()
         self.after(100, self._poll_log_queue)
 
         if not app_state.is_disclaimer_confirmed():
@@ -121,6 +171,92 @@ class App(tk.Tk):
     def _on_tab_changed(self, _event):
         if self.notebook.select() == str(self.home_tab):
             self._refresh_home_display()
+
+    # ── Theming (matches the website's dark/light green palette) ───────
+
+    @staticmethod
+    def _apply_custom_style_layer():
+        """Style tweaks layered on top of whichever sv_ttk palette is active."""
+        style = ttk.Style()
+        style.configure("TNotebook.Tab", padding=(16, 8))
+        style.configure("TLabelframe.Label", font=("", 9, "bold"))
+        style.configure("Hint.TLabel", foreground=HINT_COLOR)
+
+    def _accent_color(self) -> str:
+        return ACCENT_DARK if self.theme == "dark" else ACCENT_LIGHT
+
+    def _error_color(self) -> str:
+        return ERROR_DARK if self.theme == "dark" else ERROR_LIGHT
+
+    def _panel_bg(self) -> str:
+        """sv_ttk's own background color for the active theme (from its
+        theme/{dark,light}.tcl -- not queryable via ttk.Style().lookup(),
+        which returns "" for sv_ttk's image-based flat theme)."""
+        return "#1c1c1c" if self.theme == "dark" else "#fafafa"
+
+    def _theme_toggle_label(self) -> str:
+        return "Switch to light mode" if self.theme == "dark" else "Switch to dark mode"
+
+    def _on_toggle_theme(self):
+        sv_ttk.toggle_theme(self)
+        self.theme = sv_ttk.get_theme(self)
+        self._apply_custom_style_layer()
+        self.theme_toggle_btn.config(text=self._theme_toggle_label())
+        self._restyle_text_widgets()
+
+    def _register_link(self, label: tk.Widget):
+        self._link_labels.append(label)
+        label.configure(foreground=self._accent_color())
+
+    def _register_error_label(self, label: tk.Widget):
+        self._error_labels.append(label)
+        label.configure(foreground=self._error_color())
+
+    _LOG_TERMINAL_COLORS = {"bg": "#0d0d0d", "fg": "#d4d4d4", "insertbackground": "#d4d4d4"}
+
+    def _text_widget_colors(self) -> dict:
+        """bg/fg/cursor-color for the changelog viewer, matched to sv_ttk's current palette."""
+        if self.theme == "dark":
+            return {"bg": "#1e1e1e", "fg": "#e6e6e6", "insertbackground": "#e6e6e6"}
+        return {"bg": "#ffffff", "fg": "#16241a", "insertbackground": "#16241a"}
+
+    def _restyle_text_widgets(self):
+        """Re-theme everything sv_ttk itself doesn't touch: the accent color
+        on link labels, the warning color on error labels, the always-dark
+        terminal-style action logs, and the changelog viewer (which follows
+        the app theme). Called once after all tabs are built, and again on
+        every theme toggle."""
+        accent = self._accent_color()
+        for label in self._link_labels:
+            label.configure(foreground=accent)
+
+        error = self._error_color()
+        for label in self._error_labels:
+            label.configure(foreground=error)
+
+        for log in self.logs.values():
+            log.configure(**self._LOG_TERMINAL_COLORS)
+
+        panel_bg = self._panel_bg()
+        for canvas in self._scrollable_canvases:
+            canvas.configure(bg=panel_bg)
+
+        changelog_text = getattr(self, "changelog_text", None)
+        if changelog_text is not None:
+            colors = self._text_widget_colors()
+            changelog_text.configure(**colors)
+            if self.theme == "dark":
+                changelog_text.tag_configure("h2", foreground="#7fdb90")
+                changelog_text.tag_configure("h3", foreground=HINT_COLOR)
+                changelog_text.tag_configure("bullet_dash", foreground="#7fdb90")
+                changelog_text.tag_configure("prose", foreground=HINT_COLOR)
+                changelog_text.tag_configure("code_span", foreground="#ffbe6a")
+            else:
+                changelog_text.tag_configure("h2", foreground=ACCENT_LIGHT)
+                changelog_text.tag_configure("h3", foreground=HINT_COLOR)
+                changelog_text.tag_configure("bullet_dash", foreground=ACCENT_LIGHT)
+                changelog_text.tag_configure("prose", foreground=HINT_COLOR)
+                changelog_text.tag_configure("code_span", foreground="#a35e00")
 
     # ── First-launch disclaimer ─────────────────────────────────────────
 
@@ -190,7 +326,7 @@ class App(tk.Tk):
                 row=row, column=0, sticky="w", padx=(8, 12), pady=2
             )
             var = tk.StringVar(value="")
-            ttk.Label(settings_box, textvariable=var, foreground="#444").grid(
+            ttk.Label(settings_box, textvariable=var, style="Hint.TLabel").grid(
                 row=row, column=1, sticky="w", pady=2
             )
             self.home_display_vars[key] = var
@@ -202,11 +338,13 @@ class App(tk.Tk):
         ).pack(anchor="w", pady=(6, 12))
 
         self.legacy_warning = ttk.Frame(frame)
-        ttk.Label(
+        legacy_warning_label = ttk.Label(
             self.legacy_warning,
             text="Found an old loading screen mod from a previous version — delete it before generating a new one.",
-            foreground="#a94442", wraplength=520, justify="left",
-        ).pack(side="left", padx=(0, 8), pady=8)
+            wraplength=520, justify="left",
+        )
+        legacy_warning_label.pack(side="left", padx=(0, 8), pady=8)
+        self._register_error_label(legacy_warning_label)
         ttk.Button(
             self.legacy_warning, text="Delete legacy folder",
             command=self._delete_legacy_folder,
@@ -235,7 +373,7 @@ class App(tk.Tk):
         latest_build_box = ttk.LabelFrame(frame, text="Latest build")
         latest_build_box.pack(fill="x", pady=(0, 8))
         self.latest_build_var = tk.StringVar(value="No builds yet.")
-        ttk.Label(latest_build_box, textvariable=self.latest_build_var, foreground="#444").pack(
+        ttk.Label(latest_build_box, textvariable=self.latest_build_var, style="Hint.TLabel").pack(
             side="left", padx=8, pady=6
         )
         self.latest_build_copy_button = ttk.Button(
@@ -330,7 +468,7 @@ class App(tk.Tk):
             ttk.Label(settings_box, text=label_text, font=("", 9, "bold")).grid(
                 row=row, column=0, sticky="nw", pady=4, padx=(8, 8)
             )
-            ttk.Label(settings_box, text=desc, wraplength=260, foreground="#666").grid(
+            ttk.Label(settings_box, text=desc, wraplength=260, style="Hint.TLabel").grid(
                 row=row, column=3, sticky="nw", pady=4, padx=(8, 8)
             )
 
@@ -354,7 +492,7 @@ class App(tk.Tk):
         settings_box.columnconfigure(3, weight=1)
 
         footer_row = len(SETTINGS)
-        ttk.Label(settings_box, text="* required", foreground="#666").grid(
+        ttk.Label(settings_box, text="* required", style="Hint.TLabel").grid(
             row=footer_row, column=0, sticky="w", pady=(10, 8), padx=(8, 0)
         )
         ttk.Button(settings_box, text="Save settings", command=self._save_settings).grid(
@@ -405,7 +543,7 @@ class App(tk.Tk):
 
         history = app_state.load_build_history()
         if not history:
-            ttk.Label(self.history_list_frame, text="No builds yet.", foreground="#666").pack(anchor="w")
+            ttk.Label(self.history_list_frame, text="No builds yet.", style="Hint.TLabel").pack(anchor="w")
             return
 
         for entry in history:
@@ -570,7 +708,8 @@ class App(tk.Tk):
     # ── About tab ────────────────────────────────────────────────────
 
     def _build_scrollable_body(self, parent):
-        canvas = tk.Canvas(parent, highlightthickness=0)
+        canvas = tk.Canvas(parent, highlightthickness=0, bg=self._panel_bg())
+        self._scrollable_canvases.append(canvas)
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         inner = ttk.Frame(canvas)
 
@@ -595,9 +734,10 @@ class App(tk.Tk):
         row.pack(anchor="w", pady=pack_opts.pop("pady", (2, 0)), **pack_opts)
         if image is not None:
             ttk.Label(row, image=image).pack(side="left", padx=(0, 6))
-        link = ttk.Label(row, text=label_text, foreground="#0645ad", cursor="hand2")
+        link = ttk.Label(row, text=label_text, cursor="hand2")
         link.pack(side="left")
         link.bind("<Button-1>", lambda e: webbrowser.open(url))
+        self._register_link(link)
         return row
 
     def _build_about_tab(self):
@@ -649,9 +789,10 @@ class App(tk.Tk):
             ttk.Label(author_row, image=avatar_image).pack(side="left", padx=(0, 4))
         except Exception:
             pass
-        author_link = ttk.Label(author_row, text=AUTHOR_NAME, foreground="#0645ad", cursor="hand2")
+        author_link = ttk.Label(author_row, text=AUTHOR_NAME, cursor="hand2")
         author_link.pack(side="left")
         author_link.bind("<Button-1>", lambda e: webbrowser.open(AUTHOR_URL))
+        self._register_link(author_link)
 
         self._about_link_row(body, "A StuxieDev Project", STUXIEDEV_PROJECTS_URL, pady=(2, 10))
 
@@ -662,7 +803,7 @@ class App(tk.Tk):
 
         ttk.Label(
             body, text=f"Config file: {paths.resolve_config_path()}",
-            foreground="#666",
+            style="Hint.TLabel",
         ).pack(anchor="w", pady=(0, 10))
 
         changelog_header = ttk.Frame(body)
@@ -676,13 +817,13 @@ class App(tk.Tk):
         self.changelog_text.pack(fill="both", expand=True, pady=(0, 8))
 
         ct = self.changelog_text
-        ct.tag_configure("h2", font=("Segoe UI", 12, "bold"), foreground="#2e7d32", spacing1=14, spacing3=4)
-        ct.tag_configure("h3", font=("Segoe UI", 9, "bold"), foreground="#666", spacing1=8, spacing3=2)
+        ct.tag_configure("h2", font=("Segoe UI", 12, "bold"), spacing1=14, spacing3=4)
+        ct.tag_configure("h3", font=("Segoe UI", 9, "bold"), spacing1=8, spacing3=2)
         ct.tag_configure("bullet", lmargin1=10, lmargin2=22, spacing1=1)
-        ct.tag_configure("bullet_dash", foreground="#2e7d32")
-        ct.tag_configure("prose", foreground="#666", font=("Segoe UI", 9), spacing1=2, spacing3=4)
+        ct.tag_configure("bullet_dash")
+        ct.tag_configure("prose", font=("Segoe UI", 9), spacing1=2, spacing3=4)
         ct.tag_configure("bold_span", font=("Segoe UI", 9, "bold"))
-        ct.tag_configure("code_span", font=("Consolas", 9), foreground="#a15c00")
+        ct.tag_configure("code_span", font=("Consolas", 9))
         self._load_changelog()
 
     def _load_changelog(self):

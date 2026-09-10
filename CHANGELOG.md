@@ -5,6 +5,16 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.2.0] - 2026-09-10
+
+### Added
+- **GUI light/dark theme toggle**, matching ts4rls.stuxie.dev's own
+  palette: a bright green accent (`#4fc264`) in dark mode, the deeper
+  icon-face green (`#2e7d32`) in light mode. Reskins every ttk widget via
+  `sv_ttk` (new dependency, auto-installed like Pillow), and re-themes the
+  changelog viewer, action logs, and every link label on toggle. Dark by
+  default.
+
 ## [4.1.4] - 2026-09-10
 
 ### Fixed

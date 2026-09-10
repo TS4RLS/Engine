@@ -78,6 +78,22 @@ if errorlevel 1 (
     echo.
 )
 
+:: ── Ensure sv_ttk is available ───────────────────────────────────────
+python -c "import sv_ttk" >nul 2>&1
+if errorlevel 1 (
+    echo %C_YELLOW%sv_ttk not found — installing...%C_RESET%
+    python -m pip install sv_ttk --quiet
+    if errorlevel 1 (
+        echo %C_RED%[ERROR] Failed to install sv_ttk. Check your internet connection and try:%C_RESET%
+        echo   python -m pip install sv_ttk
+        echo.
+        pause
+        exit /b 1
+    )
+    echo %C_GREEN%sv_ttk installed.%C_RESET%
+    echo.
+)
+
 if "%~1"=="--generate" (
     python "%ROOT%\gui.py" %*
     if errorlevel 1 (

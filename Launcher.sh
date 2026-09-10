@@ -62,6 +62,17 @@ if ! "$PYTHON" -c "import PIL" >/dev/null 2>&1; then
     printf "%bPillow installed.%b\n\n" "$C_GREEN" "$C_RESET"
 fi
 
+# ── Ensure sv_ttk is available ─────────────────────────────────────────────
+if ! "$PYTHON" -c "import sv_ttk" >/dev/null 2>&1; then
+    printf "%bsv_ttk not found — installing...%b\n" "$C_YELLOW" "$C_RESET"
+    if ! "$PYTHON" -m pip install sv_ttk --quiet; then
+        printf "%b[ERROR] Failed to install sv_ttk. Check your internet connection and try:%b\n" "$C_RED" "$C_RESET"
+        echo "  $PYTHON -m pip install sv_ttk"
+        exit 1
+    fi
+    printf "%bsv_ttk installed.%b\n\n" "$C_GREEN" "$C_RESET"
+fi
+
 if [ "$1" = "--generate" ]; then
     "$PYTHON" "$ROOT/gui.py" "$@"
     status=$?

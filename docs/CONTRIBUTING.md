@@ -9,9 +9,9 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 ## Getting set up
 
 1. Python 3.6+
-2. `pip install -r requirements.txt` (installs `pytest`, `Pillow`, and
-   `sv_ttk`; all three plus `PyInstaller` are also installed automatically
-   on first run of `gui.py`/the exe builder if missing)
+2. `pip install -r requirements.txt` (installs `pytest` and `Pillow`; both
+   plus `PyInstaller` are also installed automatically on first run of
+   `gui.py`/the exe builder if missing)
 3. Run `python gui.py` once — the Build tab writes `config.json` for
    you. (See the [README](../README.md) for the full option list if you'd
    rather edit it by hand, or copy `config.example.json`.)

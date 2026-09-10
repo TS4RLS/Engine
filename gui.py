@@ -1,7 +1,8 @@
 """
-TS4RLS — single entry point and desktop GUI. Requires tkinter (ships with
-Python) and sv_ttk (a small pure-Tcl ttk theme, auto-installed below if
-missing).
+TS4RLS — single entry point and desktop GUI. Requires only the Python
+standard library (tkinter ships with Python) -- theming is a custom ttk
+theme built on the stock "clam" base (see COLORS/_apply_theme), not a
+third-party package.
 
 Run standalone:
     python gui.py              -> GUI
@@ -25,29 +26,7 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from src.common import app_state, paths
-
-
-def _ensure_dependencies():
-    if paths.is_frozen():
-        return  # a frozen build must already bundle sv_ttk
-    import importlib.util
-    if importlib.util.find_spec("sv_ttk") is None:
-        print("sv_ttk not found — installing...")
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "sv_ttk", "--quiet"],
-            stdout=subprocess.DEVNULL,
-        )
-        print("sv_ttk installed.")
-
-
-_ensure_dependencies()
-
-# sv_ttk ("Sun Valley") is a third-party ttk theme that reskins every stock
-# ttk widget with a real light/dark palette (flat buttons, modern look) --
-# something the built-in ttk themes (vista/clam/etc.) can't do on their
-# own. Matches the pattern used by TIGHC's own gui.py.
-import sv_ttk
+from src.common import app_state, paths, update_checker
 from src.cli import config_editor
 from src.cli.config_editor import SETTINGS, format_value
 from src.core.generator import (
@@ -65,20 +44,27 @@ CHANGELOG_PATH = paths.resource_path("CHANGELOG.md")
 
 FOLDER_KEYS = {"images_folder", "mods_folder"}
 
-# Same green accent tokens as style.css's :root/[data-theme] blocks on the
-# website (--accent for each theme) -- a brighter green for the dark
-# theme, the deeper icon-face green for the light theme -- so the GUI's
-# links/highlights match the site instead of using an unrelated color.
-ACCENT_DARK = "#4fc264"
-ACCENT_LIGHT = "#2e7d32"
 DEFAULT_THEME = "dark"
-# A mid-gray that stays legible against both sv_ttk's light background
-# (near-white) and its dark background (near-black) -- avoids needing a
-# separate hint color per theme, same reasoning as TIGHC's HINT_COLOR.
-HINT_COLOR = "#8f8f8f"
-# --error-fg tokens from style.css, for the legacy-folder warning text.
-ERROR_DARK = "#d98c8c"
-ERROR_LIGHT = "#b3312f"
+
+# Same tokens as style.css's :root/[data-theme] blocks on the website (one
+# color per CSS custom property, per theme) -- built into a real ttk theme
+# in _apply_theme() rather than just tinting a few labels on top of a
+# generic third-party palette, so every widget (frames, buttons, entries,
+# tabs, scrollbars) actually matches the site, not just links.
+COLORS = {
+    "dark": dict(
+        bg="#10160f", bg_alt="#151d14", panel="#1a2419", border="#2a3728",
+        text="#e7f0e5", text_dim="#a8b8a4", muted="#6d7d6a",
+        accent="#4fc264", accent_hover="#6fd082", accent_contrast="#ffffff",
+        error="#d98c8c",
+    ),
+    "light": dict(
+        bg="#f6faf5", bg_alt="#eef5ec", panel="#ffffff", border="#d9e5d6",
+        text="#16241a", text_dim="#4c5f49", muted="#7c8c78",
+        accent="#2e7d32", accent_hover="#256428", accent_contrast="#ffffff",
+        error="#b3312f",
+    ),
+}
 
 DISCLAIMER_TITLE = "Before you continue"
 DISCLAIMER_TEXT = (
@@ -127,16 +113,14 @@ class App(tk.Tk):
         self.home_display_vars = {}
         self.worker = None
         self.log_queue = queue.Queue()
+        self._update_check_queue = queue.Queue()
         self.logs = {}
         self.status_vars = {}
         self.buttons = {}
-        self._link_labels = []  # accent-colored labels re-colored on theme toggle
-        self._error_labels = []  # warning-colored labels re-colored on theme toggle
         self._scrollable_canvases = []  # plain Tk canvases (see _build_scrollable_body) re-themed alongside changelog_text
 
         self.theme = DEFAULT_THEME
-        sv_ttk.set_theme(self.theme, self)
-        self._apply_custom_style_layer()
+        self._apply_theme()
 
         top_bar = ttk.Frame(self)
         top_bar.pack(fill="x", padx=8, pady=(8, 0))
@@ -178,91 +162,119 @@ class App(tk.Tk):
         if self.notebook.select() == str(self.home_tab):
             self._refresh_home_display()
 
-    # ── Theming (matches the website's dark/light green palette) ───────
+    # ── Theming (a real ttk theme built from the website's own tokens) ──
 
-    @staticmethod
-    def _apply_custom_style_layer():
-        """Style tweaks layered on top of whichever sv_ttk palette is active."""
-        style = ttk.Style()
-        style.configure("TNotebook.Tab", padding=(16, 8))
-        style.configure("TLabelframe.Label", font=("", 9, "bold"))
-        style.configure("Hint.TLabel", foreground=HINT_COLOR)
+    def _tokens(self) -> dict:
+        return COLORS[self.theme]
 
-    def _accent_color(self) -> str:
-        return ACCENT_DARK if self.theme == "dark" else ACCENT_LIGHT
-
-    def _error_color(self) -> str:
-        return ERROR_DARK if self.theme == "dark" else ERROR_LIGHT
-
-    def _panel_bg(self) -> str:
-        """sv_ttk's own background color for the active theme (from its
-        theme/{dark,light}.tcl -- not queryable via ttk.Style().lookup(),
-        which returns "" for sv_ttk's image-based flat theme)."""
-        return "#1c1c1c" if self.theme == "dark" else "#fafafa"
+    def _apply_theme(self):
+        """Build (once) and activate a full custom ttk theme for the
+        current self.theme, covering every widget class this GUI actually
+        uses -- frames, labelframes, notebook tabs, buttons, entries,
+        checkbuttons, scrollbars, and the Hint/Error/Link label variants --
+        instead of layering a couple of colors on top of a generic
+        third-party palette. Built on "clam", the only stock ttk theme
+        that honors these options everywhere (vista/aqua draw widgets
+        natively and ignore most of them)."""
+        c = self._tokens()
+        theme_name = f"ts4rls_{self.theme}"
+        style = ttk.Style(self)
+        if theme_name not in style.theme_names():
+            style.theme_create(theme_name, parent="clam", settings={
+                ".": {"configure": {"background": c["bg"], "foreground": c["text"], "font": ("", 9)}},
+                "TFrame": {"configure": {"background": c["bg"]}},
+                "TLabel": {"configure": {"background": c["bg"], "foreground": c["text"]}},
+                "Hint.TLabel": {"configure": {"background": c["bg"], "foreground": c["text_dim"]}},
+                "Error.TLabel": {"configure": {"background": c["bg"], "foreground": c["error"]}},
+                "Link.TLabel": {"configure": {"background": c["bg"], "foreground": c["accent"]}},
+                "TLabelframe": {"configure": {
+                    "background": c["bg"], "bordercolor": c["border"], "relief": "solid", "borderwidth": 1,
+                }},
+                "TLabelframe.Label": {"configure": {
+                    "background": c["bg"], "foreground": c["text"], "font": ("", 9, "bold"),
+                }},
+                "TNotebook": {"configure": {"background": c["bg"], "bordercolor": c["border"]}},
+                "TNotebook.Tab": {
+                    "configure": {
+                        "background": c["bg_alt"], "foreground": c["text_dim"],
+                        "padding": (16, 8), "bordercolor": c["border"],
+                    },
+                    "map": {
+                        "background": [("selected", c["bg"])],
+                        "foreground": [("selected", c["text"])],
+                    },
+                },
+                "TButton": {
+                    "configure": {
+                        "background": c["panel"], "foreground": c["text"],
+                        "bordercolor": c["border"], "padding": (10, 6), "relief": "flat",
+                    },
+                    "map": {
+                        "bordercolor": [("active", c["accent"]), ("focus", c["accent"])],
+                        "background": [("pressed", c["bg_alt"]), ("disabled", c["bg_alt"])],
+                        "foreground": [("disabled", c["muted"])],
+                    },
+                },
+                "TEntry": {
+                    "configure": {
+                        "fieldbackground": c["panel"], "foreground": c["text"],
+                        "bordercolor": c["border"], "insertcolor": c["text"],
+                    },
+                    "map": {"bordercolor": [("focus", c["accent"])]},
+                },
+                "TCheckbutton": {
+                    "configure": {"background": c["bg"], "foreground": c["text"]},
+                    "map": {"background": [("active", c["bg"])]},
+                },
+                "Vertical.TScrollbar": {"configure": {
+                    "background": c["bg_alt"], "troughcolor": c["bg"],
+                    "bordercolor": c["border"], "arrowcolor": c["text_dim"],
+                }},
+            })
+        style.theme_use(theme_name)
+        self.configure(bg=c["bg"])
 
     def _theme_toggle_label(self) -> str:
         return "Switch to light mode" if self.theme == "dark" else "Switch to dark mode"
 
     def _on_toggle_theme(self):
-        sv_ttk.toggle_theme(self)
-        self.theme = sv_ttk.get_theme(self)
-        self._apply_custom_style_layer()
+        self.theme = "light" if self.theme == "dark" else "dark"
+        self._apply_theme()
         self.theme_toggle_btn.config(text=self._theme_toggle_label())
         self._restyle_text_widgets()
-
-    def _register_link(self, label: tk.Widget):
-        self._link_labels.append(label)
-        label.configure(foreground=self._accent_color())
-
-    def _register_error_label(self, label: tk.Widget):
-        self._error_labels.append(label)
-        label.configure(foreground=self._error_color())
 
     _LOG_TERMINAL_COLORS = {"bg": "#0d0d0d", "fg": "#d4d4d4", "insertbackground": "#d4d4d4"}
 
     def _text_widget_colors(self) -> dict:
-        """bg/fg/cursor-color for the changelog viewer, matched to sv_ttk's current palette."""
-        if self.theme == "dark":
-            return {"bg": "#1e1e1e", "fg": "#e6e6e6", "insertbackground": "#e6e6e6"}
-        return {"bg": "#ffffff", "fg": "#16241a", "insertbackground": "#16241a"}
+        """bg/fg/cursor-color for the changelog viewer, matched to the
+        active theme's panel/text tokens."""
+        c = self._tokens()
+        return {"bg": c["panel"], "fg": c["text"], "insertbackground": c["text"]}
 
     def _restyle_text_widgets(self):
-        """Re-theme everything sv_ttk itself doesn't touch: the accent color
-        on link labels, the warning color on error labels, the always-dark
-        terminal-style action logs, and the changelog viewer (which follows
-        the app theme). Called once after all tabs are built, and again on
-        every theme toggle."""
-        accent = self._accent_color()
-        for label in self._link_labels:
-            label.configure(foreground=accent)
-
-        error = self._error_color()
-        for label in self._error_labels:
-            label.configure(foreground=error)
+        """Re-theme the classic Tk widgets ttk styling can't reach: the
+        scrollable About-tab canvas, the always-dark terminal-style action
+        logs, and the changelog viewer (which follows the app theme).
+        Called once after all tabs are built, and again on every theme
+        toggle. Link/Hint/Error labels and every ttk widget re-theme
+        automatically via _apply_theme()'s style switch -- no manual loop
+        needed for those."""
+        c = self._tokens()
 
         for log in self.logs.values():
             log.configure(**self._LOG_TERMINAL_COLORS)
 
-        panel_bg = self._panel_bg()
         for canvas in self._scrollable_canvases:
-            canvas.configure(bg=panel_bg)
+            canvas.configure(bg=c["bg"])
 
         changelog_text = getattr(self, "changelog_text", None)
         if changelog_text is not None:
-            colors = self._text_widget_colors()
-            changelog_text.configure(**colors)
-            if self.theme == "dark":
-                changelog_text.tag_configure("h2", foreground="#7fdb90")
-                changelog_text.tag_configure("h3", foreground=HINT_COLOR)
-                changelog_text.tag_configure("bullet_dash", foreground="#7fdb90")
-                changelog_text.tag_configure("prose", foreground=HINT_COLOR)
-                changelog_text.tag_configure("code_span", foreground="#ffbe6a")
-            else:
-                changelog_text.tag_configure("h2", foreground=ACCENT_LIGHT)
-                changelog_text.tag_configure("h3", foreground=HINT_COLOR)
-                changelog_text.tag_configure("bullet_dash", foreground=ACCENT_LIGHT)
-                changelog_text.tag_configure("prose", foreground=HINT_COLOR)
-                changelog_text.tag_configure("code_span", foreground="#a35e00")
+            changelog_text.configure(**self._text_widget_colors())
+            changelog_text.tag_configure("h2", foreground=c["accent"])
+            changelog_text.tag_configure("h3", foreground=c["text_dim"])
+            changelog_text.tag_configure("bullet_dash", foreground=c["accent"])
+            changelog_text.tag_configure("prose", foreground=c["text_dim"])
+            changelog_text.tag_configure("code_span", foreground="#ffbe6a" if self.theme == "dark" else "#a35e00")
 
     # ── First-launch disclaimer ─────────────────────────────────────────
 
@@ -271,7 +283,7 @@ class App(tk.Tk):
         dialog: centered logo, title, body, and buttons, shown before the
         main window (which stays withdrawn until this resolves)."""
         dialog = tk.Toplevel(self)
-        dialog.configure(bg=self._panel_bg())
+        dialog.configure(bg=self._tokens()["bg"])
         dialog.title(DISCLAIMER_TITLE)
         dialog.transient(self)
         dialog.resizable(False, False)
@@ -354,10 +366,9 @@ class App(tk.Tk):
         legacy_warning_label = ttk.Label(
             self.legacy_warning,
             text="Found an old loading screen mod from a previous version — delete it before generating a new one.",
-            wraplength=520, justify="left",
+            wraplength=520, justify="left", style="Error.TLabel",
         )
         legacy_warning_label.pack(side="left", padx=(0, 8), pady=8)
-        self._register_error_label(legacy_warning_label)
         ttk.Button(
             self.legacy_warning, text="Delete legacy folder",
             command=self._delete_legacy_folder,
@@ -721,7 +732,7 @@ class App(tk.Tk):
     # ── About tab ────────────────────────────────────────────────────
 
     def _build_scrollable_body(self, parent):
-        canvas = tk.Canvas(parent, highlightthickness=0, bg=self._panel_bg())
+        canvas = tk.Canvas(parent, highlightthickness=0, bg=self._tokens()["bg"])
         self._scrollable_canvases.append(canvas)
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         inner = ttk.Frame(canvas)
@@ -747,10 +758,9 @@ class App(tk.Tk):
         row.pack(anchor="w", pady=pack_opts.pop("pady", (2, 0)), **pack_opts)
         if image is not None:
             ttk.Label(row, image=image).pack(side="left", padx=(0, 6))
-        link = ttk.Label(row, text=label_text, cursor="hand2")
+        link = ttk.Label(row, text=label_text, cursor="hand2", style="Link.TLabel")
         link.pack(side="left")
         link.bind("<Button-1>", lambda e: webbrowser.open(url))
-        self._register_link(link)
         return row
 
     def _build_about_tab(self):
@@ -774,6 +784,17 @@ class App(tk.Tk):
         text_col.pack(side="left", anchor="w")
         ttk.Label(text_col, text="TS4RLS — The Sims 4 Random Loading Screen", font=("", 13, "bold")).pack(anchor="w")
         ttk.Label(text_col, text=f"v{_get_version()}").pack(anchor="w")
+
+        update_row = ttk.Frame(text_col)
+        update_row.pack(anchor="w", pady=(4, 0))
+        self._update_url = update_checker.RELEASES_PAGE_URL
+        self.update_status_var = tk.StringVar(value="Checking for updates...")
+        ttk.Label(update_row, textvariable=self.update_status_var, style="Hint.TLabel").pack(side="left")
+        self.update_link = ttk.Label(update_row, text="Download", cursor="hand2", style="Link.TLabel")
+        self.update_link.bind("<Button-1>", lambda e: webbrowser.open(self._update_url))
+        # Not packed until an update is actually found (see _on_update_check_result).
+        self.update_check_btn = ttk.Button(update_row, text="Check again", command=self._start_update_check)
+        self.update_check_btn.pack(side="left", padx=(8, 0))
 
         body = self._build_scrollable_body(outer)
 
@@ -802,10 +823,9 @@ class App(tk.Tk):
             ttk.Label(author_row, image=avatar_image).pack(side="left", padx=(0, 4))
         except Exception:
             pass
-        author_link = ttk.Label(author_row, text=AUTHOR_NAME, cursor="hand2")
+        author_link = ttk.Label(author_row, text=AUTHOR_NAME, cursor="hand2", style="Link.TLabel")
         author_link.pack(side="left")
         author_link.bind("<Button-1>", lambda e: webbrowser.open(AUTHOR_URL))
-        self._register_link(author_link)
 
         self._about_link_row(body, "A StuxieDev Project", STUXIEDEV_PROJECTS_URL, pady=(2, 10))
 
@@ -838,6 +858,42 @@ class App(tk.Tk):
         ct.tag_configure("bold_span", font=("Segoe UI", 9, "bold"))
         ct.tag_configure("code_span", font=("Consolas", 9))
         self._load_changelog()
+        self._start_update_check()
+
+    def _start_update_check(self):
+        self.update_check_btn.configure(state="disabled")
+        self.update_status_var.set("Checking for updates...")
+        self.update_link.pack_forget()
+
+        def worker():
+            # Background threads must never touch Tk widgets or call
+            # self.after() directly (not guaranteed thread-safe) -- only
+            # ever hand results back via a thread-safe queue.Queue, same
+            # pattern as the Home/Build action logs (see _poll_log_queue).
+            result = update_checker.check_for_update(_get_version())
+            self._update_check_queue.put(result)
+
+        threading.Thread(target=worker, daemon=True).start()
+        self.after(150, self._poll_update_check_queue)
+
+    def _poll_update_check_queue(self):
+        try:
+            result = self._update_check_queue.get_nowait()
+        except queue.Empty:
+            self.after(150, self._poll_update_check_queue)
+            return
+        self._on_update_check_result(result)
+
+    def _on_update_check_result(self, result):
+        self.update_check_btn.configure(state="normal")
+        self._update_url = result.url
+        if result.error:
+            self.update_status_var.set("Couldn't check for updates.")
+        elif result.update_available:
+            self.update_status_var.set(f"Update available: v{result.latest_version} —")
+            self.update_link.pack(side="left", before=self.update_check_btn)
+        else:
+            self.update_status_var.set("You're on the latest version.")
 
     def _load_changelog(self):
         """(Re)load CHANGELOG.md into the changelog viewer, rendering markdown

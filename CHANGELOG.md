@@ -5,6 +5,30 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.4.0] - 2026-09-10
+
+### Added
+- **Update checker**: the About tab checks GitHub Releases for a newer
+  version in the background on load, shows "You're on the latest
+  version." or "Update available: vX.Y.Z" with a download link straight
+  to the release, and a "Check again" button for a manual re-check. Pure
+  stdlib (`urllib`), no new dependency — new `src/common/update_checker.py`
+  (11 unit tests, mocked network).
+
+### Changed
+- **GUI theming replaced with a real custom ttk theme, built directly
+  from the website's own color tokens** (`gui.py`'s new `COLORS` dict —
+  one-to-one with `style.css`'s `:root`/`[data-theme]` blocks), covering
+  every widget class this GUI uses (frames, labelframes, notebook tabs,
+  buttons, entries, checkbuttons, scrollbars) — not just link labels
+  layered on top of a generic third-party palette. The previous approach
+  (`sv_ttk`, added in 4.2.0) only recolored a handful of labels; everything
+  else stayed `sv_ttk`'s own unrelated blue-accented palette, which read as
+  "not actually colored like the website." Built on the stock `clam` ttk
+  theme via `ttk.Style().theme_create()` — the only bundled theme that
+  honors these options everywhere (`vista`/`aqua` draw natively and ignore
+  most of them). **`sv_ttk` is no longer a dependency.**
+
 ## [4.3.1] - 2026-09-10
 
 ### Fixed

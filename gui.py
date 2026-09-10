@@ -1,17 +1,13 @@
 """
 TS4RLS — single entry point and desktop GUI. This is what gets built into
-the distributed executable(s); requires only the Python standard library
+the distributed executable; requires only the Python standard library
 (tkinter ships with Python).
 
 Run standalone:
-    python gui.py                                   -> GUI
-    python gui.py --generate [--force-launch]        -> headless, one-shot
+    python gui.py              -> GUI
+    python gui.py --generate   -> headless, one-shot
 
-When the running executable's own filename matches the CurseForge disguise
-name (TS4_x64[.exe]), it always behaves as --generate --force-launch with
-no arguments needed, so the same build works as both the normal app and
-the CurseForge pre-launch script. Use src/build/executable_builder.py to
-build the executable(s).
+Use src/build/executable_builder.py to build the executable.
 """
 
 import os
@@ -32,13 +28,14 @@ if _ROOT not in sys.path:
 from src.common import paths
 from src.cli import config_editor
 from src.cli.config_editor import SETTINGS, format_value
-from src.core.generator import GeneratorError, generate, load_config as load_generator_config
+from src.core.generator import (
+    GeneratorError, find_legacy_output, generate,
+    load_config as load_generator_config,
+)
 
 REPO_URL = "https://github.com/TS4RLS/Engine"
-CURSEFORGE_NAME = "ts4_x64"
 
 FOLDER_KEYS = {"images_folder", "mods_folder"}
-FILE_KEYS = {"game_exe"}
 
 
 def _get_version() -> str:
@@ -55,11 +52,6 @@ def find_python() -> str:
         if path:
             return path
     return ""
-
-
-def _is_curseforge_build() -> bool:
-    name = os.path.splitext(os.path.basename(sys.executable if getattr(sys, "frozen", False) else __file__))[0]
-    return name.lower() == CURSEFORGE_NAME
 
 
 class App(tk.Tk):
@@ -111,6 +103,8 @@ class App(tk.Tk):
 
         for row, (key, kind, desc, required, default) in enumerate(SETTINGS):
             current = cfg.get(key, None if required else default)
+            if current is None and key == "mods_folder":
+                current = paths.guess_mods_folder() or None
 
             label_text = key + (" *" if required else "")
             ttk.Label(container, text=label_text, font=("", 9, "bold")).grid(
@@ -134,11 +128,6 @@ class App(tk.Tk):
                         container, text="Browse...",
                         command=lambda v=var: self._browse_folder(v),
                     ).grid(row=row, column=2, padx=4)
-                elif key in FILE_KEYS:
-                    ttk.Button(
-                        container, text="Browse...",
-                        command=lambda v=var: self._browse_file(v),
-                    ).grid(row=row, column=2, padx=4)
 
             self.field_vars[key] = (var, kind, required)
 
@@ -153,11 +142,6 @@ class App(tk.Tk):
 
     def _browse_folder(self, var):
         path = filedialog.askdirectory(initialdir=var.get() or _ROOT)
-        if path:
-            var.set(path)
-
-    def _browse_file(self, var):
-        path = filedialog.askopenfilename(initialdir=os.path.dirname(var.get()) or _ROOT)
         if path:
             var.set(path)
 
@@ -183,13 +167,27 @@ class App(tk.Tk):
                 cfg[key] = raw
 
         saved_to = config_editor.save_config(cfg)
+        self._refresh_legacy_warning()
         messagebox.showinfo("Saved", f"Saved to {saved_to}")
 
     # ── Actions tab ──────────────────────────────────────────────────
 
     def _build_actions_tab(self):
+        self.legacy_warning = ttk.Frame(self.actions_tab)
+        ttk.Label(
+            self.legacy_warning,
+            text="Found an old loading screen mod from a previous version — delete it before generating a new one.",
+            foreground="#a94442", wraplength=520, justify="left",
+        ).pack(side="left", padx=(12, 8), pady=8)
+        ttk.Button(
+            self.legacy_warning, text="Delete legacy folder",
+            command=self._delete_legacy_folder,
+        ).pack(side="left", padx=(0, 12))
+        # Not packed until _refresh_legacy_warning() finds something to show.
+
         buttons = ttk.Frame(self.actions_tab)
         buttons.pack(fill="x", padx=12, pady=12)
+        self.actions_buttons_frame = buttons
 
         self.action_buttons = []
 
@@ -204,6 +202,7 @@ class App(tk.Tk):
             col += 1
 
         add_button("Generate loading screen", self._run_generate)
+        self.generate_button = self.action_buttons[-1]
         add_button("Rename images only", self._run_rename)
 
         # Dev-only actions: meaningless in a shipped single exe (no
@@ -217,6 +216,40 @@ class App(tk.Tk):
 
         self.log = scrolledtext.ScrolledText(self.actions_tab, state="disabled", height=20)
         self.log.pack(fill="both", expand=True, padx=12, pady=(4, 12))
+
+        self._refresh_legacy_warning()
+
+    def _refresh_legacy_warning(self):
+        try:
+            mods_folder = load_generator_config().get("mods_folder", "")
+        except Exception:
+            mods_folder = ""
+        legacy_found = bool(mods_folder and find_legacy_output(mods_folder))
+
+        if legacy_found:
+            self.legacy_warning.pack(fill="x", before=self.actions_buttons_frame, padx=0, pady=(8, 0))
+            self.generate_button.configure(state="disabled")
+        else:
+            self.legacy_warning.pack_forget()
+            self.generate_button.configure(state="normal")
+
+    def _delete_legacy_folder(self):
+        mods_folder = load_generator_config().get("mods_folder", "")
+        legacy_folder = find_legacy_output(mods_folder) if mods_folder else ""
+        if not legacy_folder:
+            self._refresh_legacy_warning()
+            return
+        if not messagebox.askyesno(
+            "Delete legacy folder",
+            f"Permanently delete this folder?\n\n{legacy_folder}",
+        ):
+            return
+        try:
+            shutil.rmtree(legacy_folder)
+            self._append_log(f"\nDeleted legacy folder: {legacy_folder}\n")
+        except Exception as exc:
+            messagebox.showerror("Failed", f"Couldn't delete the folder: {exc}")
+        self._refresh_legacy_warning()
 
     def _append_log(self, text: str):
         self.log.configure(state="normal")
@@ -251,8 +284,6 @@ class App(tk.Tk):
         try:
             cfg = load_generator_config()
             result = generate(cfg, log=self._queue_log)
-            if result.warning:
-                self._queue_log(f"[WARNING] {result.warning}")
             self._queue_log(f"Done! Written to: {result.output_path}")
             self.log_queue.put(("done", 0))
         except GeneratorError as e:
@@ -328,6 +359,7 @@ class App(tk.Tk):
                     ok = payload == 0
                     self.status_var.set("Done." if ok else f"Failed (exit code {payload}).")
                     self._set_buttons_enabled(True)
+                    self._refresh_legacy_warning()
         except queue.Empty:
             pass
         self.after(100, self._poll_log_queue)
@@ -410,20 +442,18 @@ class App(tk.Tk):
 
 def main():
     argv = sys.argv[1:]
-    force_launch = "--force-launch" in argv or _is_curseforge_build()
-    headless = "--generate" in argv or _is_curseforge_build()
+    headless = "--generate" in argv
 
     if headless:
         from src.cli import cli_colors
 
         try:
             cfg = load_generator_config()
-            result = generate(cfg, force_launch=force_launch)
+            result = generate(cfg)
         except GeneratorError as e:
             print("\n" + cli_colors.error(str(e)))
             sys.exit(1)
-        if result.warning:
-            print(cli_colors.warning(result.warning))
+        print(f"Done! Written to: {result.output_path}")
         return
 
     App().mainloop()

@@ -7,18 +7,10 @@
     "is_vertical": false,
     // Rename every image to a random name (and convert to JPEG) before picking
     "rename_files": false,
-    // Automatically launch Sims 4 after generating the mod
-    "launch_game": false,
     // Never block on the "press any key to close" prompt
     "non_interactive": true,
-    // Launch via Steam (steam://rungameid/...) instead of game_exe
-    "launch_via_steam": false,
-    // Direct path to TS4_x64.exe — only used when launch_via_steam is false
-    "game_exe": "C:/Program Files/EA Games/The Sims 4/Game/Bin/TS4_x64.exe",
     // Loading screen output width
     "target_width": 1920,
     // Loading screen output height
-    "target_height": 1080,
-    // Also build the TS4_x64 CurseForge pre-launch executable
-    "create_curseforge_version": false
+    "target_height": 1080
 }

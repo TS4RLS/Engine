@@ -72,3 +72,17 @@ def ensure_parent_dir(path: str) -> None:
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
+
+
+def guess_mods_folder() -> str:
+    """Best-effort guess at the Sims 4 Mods folder: it's always the game's
+    own data folder (Documents/Electronic Arts/The Sims 4, on both Windows
+    and macOS) with 'Mods' appended. Returns "" if that folder isn't found
+    (e.g. Linux/Proton installs, whose path varies too much to guess)."""
+    if sys.platform in ("win32", "darwin"):
+        candidate = os.path.expanduser(
+            os.path.join("~", "Documents", "Electronic Arts", "The Sims 4", "Mods")
+        )
+        if os.path.isdir(candidate):
+            return candidate
+    return ""

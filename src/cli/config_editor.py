@@ -23,13 +23,9 @@ SETTINGS = [
     ("mods_folder", "str", "Your Sims 4 Mods folder", True, ""),
     ("is_vertical", "bool", "Combine 2 portrait images side-by-side into one loading screen", False, True),
     ("rename_files", "bool", "Rename every image to a random name (and convert to JPEG) before picking", False, False),
-    ("launch_game", "bool", "Automatically launch Sims 4 after generating the mod", False, True),
     ("non_interactive", "bool", 'Never block on the "press any key to close" prompt', False, True),
-    ("launch_via_steam", "bool", "Launch via Steam (steam://rungameid/...) instead of game_exe", False, True),
-    ("game_exe", "str", "Direct path to TS4_x64.exe — only used when launch_via_steam is false", False, ""),
     ("target_width", "int", "Loading screen output width", False, 1920),
     ("target_height", "int", "Loading screen output height", False, 1080),
-    ("create_curseforge_version", "bool", "Also build the TS4_x64 CurseForge pre-launch executable", False, False),
 ]
 
 

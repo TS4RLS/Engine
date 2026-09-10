@@ -3,7 +3,7 @@
 # End users should use the built TS4RLS/TS4_x64 executable instead
 # (see src/build/executable_builder.py, dist/ once built). Pass
 # --generate here to skip straight to generating a loading screen, e.g.:
-#   ./Launcher.sh --generate [--force-launch]
+#   ./Launcher.sh --generate
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION.md")"

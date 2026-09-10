@@ -1,24 +1,16 @@
 """
-Build script — compiles gui.py (repo root) into standalone, self-contained
-executables for the platform you run this on (bundled Python, Pillow,
+Build script — compiles gui.py (repo root) into a standalone, self-contained
+executable for the platform you run this on (bundled Python, Pillow,
 tkinter, and the assets they need — nothing else required on the target
 machine). PyInstaller can't cross-compile, so run this on each platform
 you want a native build for.
 
-Run this whenever you want to create or refresh the executables:
+Run this whenever you want to create or refresh the executable:
     python src/build/executable_builder.py
 
-Built executables land in dist/, not the repo root. Two are built from the
-exact same gui.py, so there is only one codepath to maintain:
-
-  - TS4RLS(.exe) — double-click for the GUI; pass --generate
-    [--force-launch] for a headless one-shot run (unattended use, other
-    launchers, a Steam shortcut).
-  - TS4_x64(.exe), built only if config.json has
-    "create_curseforge_version": true — mirrors the filename of Sims 4's
-    own game executable. gui.py detects this filename and automatically
-    behaves as --generate --force-launch with no arguments needed, for use
-    as a CurseForge pre-launch script.
+The built executable lands in dist/, not the repo root. Double-click it
+for the GUI, or run it with --generate for a headless one-shot run
+(unattended use, other launchers, a Steam shortcut).
 """
 
 import os
@@ -31,12 +23,10 @@ ROOT_DIR   = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from src.common.config_format import parse_jsonc
 from src.cli import cli_colors
 
-APP_EXE_NAME        = "TS4RLS"
-CURSEFORGE_EXE_NAME = "TS4_x64"
-DIST_DIR            = os.path.join(ROOT_DIR, "dist")
+APP_EXE_NAME = "TS4RLS"
+DIST_DIR     = os.path.join(ROOT_DIR, "dist")
 
 IS_WINDOWS = sys.platform.startswith("win")
 IS_MACOS   = sys.platform == "darwin"
@@ -67,17 +57,6 @@ def _get_version() -> str:
         return "?"
 
 
-def _load_build_config() -> dict:
-    config_path = os.path.join(ROOT_DIR, "config.json")
-    if not os.path.isfile(config_path):
-        return {}
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            return parse_jsonc(f.read())
-    except Exception:
-        return {}
-
-
 def _exe_suffix() -> str:
     # PyInstaller only appends .exe when building on Windows; macOS/Linux
     # binaries come out with no extension.
@@ -95,11 +74,11 @@ def _data_args() -> list:
     return args
 
 
-def _icon_args(base_name: str) -> list:
+def _icon_args() -> list:
     if IS_WINDOWS:
-        ico_path = os.path.join(ROOT_DIR, "assets", base_name + ".ico")
+        ico_path = os.path.join(ROOT_DIR, "assets", "icon.ico")
     elif IS_MACOS:
-        ico_path = os.path.join(ROOT_DIR, "assets", base_name + ".icns")
+        ico_path = os.path.join(ROOT_DIR, "assets", "icon.icns")
     else:
         # PyInstaller doesn't support icon embedding for plain Linux/ELF
         # binaries, so there's nothing useful to pass here.
@@ -111,60 +90,6 @@ def _icon_args(base_name: str) -> list:
     return []
 
 
-def _build_exe(name: str, icon_base: str) -> str:
-    build_dir = os.path.join(ROOT_DIR, f"_build_temp_{name}")
-    entry = os.path.join(ROOT_DIR, "gui.py")
-
-    try:
-        print(f"\nRunning PyInstaller for '{name}'...")
-        subprocess.check_call(
-            [
-                sys.executable, "-m", "PyInstaller",
-                "--onefile",
-                "--console",  # needed for --generate output; the GUI still opens fine
-                f"--name={name}",
-                f"--distpath={DIST_DIR}",
-                f"--workpath={build_dir}",
-                f"--specpath={build_dir}",
-                f"--paths={ROOT_DIR}",      # so PyInstaller can resolve `from src.x import y`
-                *_data_args(),
-                *_icon_args(icon_base),
-                entry,
-            ],
-            cwd=ROOT_DIR,
-        )
-    finally:
-        if os.path.isdir(build_dir):
-            shutil.rmtree(build_dir, ignore_errors=True)
-
-    exe_path = os.path.join(DIST_DIR, name + _exe_suffix())
-    if not os.path.isfile(exe_path):
-        print("\n" + cli_colors.error(f"Build finished but executable was not found: {exe_path}"))
-        sys.exit(1)
-
-    if not IS_WINDOWS:
-        os.chmod(exe_path, 0o755)
-
-    return exe_path
-
-
-def _should_build_curseforge(default: bool, interactive: bool, ask=input) -> bool:
-    """Decide whether to build the CurseForge (TS4_x64) executable.
-
-    Non-interactive runs (piped/redirected stdin, e.g. CI) always fall back
-    to the `create_curseforge_version` config default. Interactive runs are
-    asked each time, defaulting to whatever the config says, so config.json
-    still lets you set a lasting preference without answering every build.
-    """
-    if not interactive:
-        return default
-    prompt = "Y/n" if default else "y/N"
-    answer = ask(f"\nAlso build the CurseForge (TS4_x64) pre-launch executable? [{prompt}]: ").strip().lower()
-    if not answer:
-        return default
-    return answer in ("y", "yes")
-
-
 def build():
     print(cli_colors.banner(
         "TS4RLS - The Sims 4 Random Loading Screen - Executable Builder",
@@ -174,19 +99,41 @@ def build():
     ensure_pyinstaller()
     os.makedirs(DIST_DIR, exist_ok=True)
 
-    app_path = _build_exe(APP_EXE_NAME, "icon")
-    print(f"\nDone!  App ready: {app_path}")
-    print("Double-click for the GUI, or run with --generate [--force-launch].")
+    build_dir = os.path.join(ROOT_DIR, f"_build_temp_{APP_EXE_NAME}")
+    entry = os.path.join(ROOT_DIR, "gui.py")
 
-    cfg = _load_build_config()
-    default_cf = cfg.get("create_curseforge_version", False)
-    if _should_build_curseforge(default_cf, sys.stdin.isatty()):
-        # Uses the plumbob-style icon that mimics Sims 4's own game icon
-        # (not the TS4RLS brand icon) so the disguised executable stays
-        # visually consistent with the real TS4_x64.exe it replaces.
-        cf_path = _build_exe(CURSEFORGE_EXE_NAME, "icon_curseforge")
-        print(f"\nCurseForge version ready: {cf_path}")
-        print("This always launches the game — use it as your CurseForge pre-launch script.")
+    try:
+        print(f"\nRunning PyInstaller for '{APP_EXE_NAME}'...")
+        subprocess.check_call(
+            [
+                sys.executable, "-m", "PyInstaller",
+                "--onefile",
+                "--console",  # needed for --generate output; the GUI still opens fine
+                f"--name={APP_EXE_NAME}",
+                f"--distpath={DIST_DIR}",
+                f"--workpath={build_dir}",
+                f"--specpath={build_dir}",
+                f"--paths={ROOT_DIR}",      # so PyInstaller can resolve `from src.x import y`
+                *_data_args(),
+                *_icon_args(),
+                entry,
+            ],
+            cwd=ROOT_DIR,
+        )
+    finally:
+        if os.path.isdir(build_dir):
+            shutil.rmtree(build_dir, ignore_errors=True)
+
+    exe_path = os.path.join(DIST_DIR, APP_EXE_NAME + _exe_suffix())
+    if not os.path.isfile(exe_path):
+        print("\n" + cli_colors.error(f"Build finished but executable was not found: {exe_path}"))
+        sys.exit(1)
+
+    if not IS_WINDOWS:
+        os.chmod(exe_path, 0o755)
+
+    print(f"\nDone!  App ready: {exe_path}")
+    print("Double-click for the GUI, or run with --generate.")
 
 
 if __name__ == "__main__":

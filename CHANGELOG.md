@@ -5,6 +5,51 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.0.0] - 2026-09-10
+
+### Changed
+- **No more automatic game launching.** TS4RLS now only ever generates the
+  `.package` mod and drops it into your Mods folder — it no longer offers
+  to launch Sims 4 for you afterwards. The `launch_game`,
+  `launch_via_steam`, and `game_exe` config keys, and the `--force-launch`
+  flag, are all removed.
+- **No more separate CurseForge build.** The `TS4_x64` disguise executable,
+  `create_curseforge_version` config key, and `assets/icon_curseforge.*`
+  are all gone — `src/build/executable_builder.py` now only builds the one
+  `TS4RLS` executable.
+- **Output renamed**: the generated mod is now `TS4RLS.package` in
+  `Mods/TS4RLS/` (was `RandomLoadingScreen.package` in
+  `Mods/RandomLoadingScreen/`). The GUI detects a leftover
+  `Mods/RandomLoadingScreen` folder from a previous version and blocks
+  **Generate** until you delete it (one click, from a banner in the
+  Actions tab) — having both installed at once means two loading screen
+  packages are active, and only one can be.
+- **`mods_folder` is now guessed automatically** on Windows/macOS (it's
+  always your Sims 4 data folder with `Mods` appended, e.g.
+  `Documents/Electronic Arts/The Sims 4/Mods`) and pre-filled in the
+  Settings tab if found.
+- **Icon/logo redesigned**: the dice pips are now clearly little framed
+  photos (a dark frame border around a white photo, not just a plain
+  diamond), and the brand green is deeper/more muted (`#2e7d32` face,
+  was `#3fae52`).
+- **Steam artwork consolidated to one set per slot** (`cover.png`,
+  `wide_cover.png`, `background.png`, `logo.png`) — the `_dark`/`_light`
+  pairs and the separate `assets/icon_dark.png`/`icon_light.png` source
+  icons are gone. Colors now match the brand icon/logo exactly, on a
+  light green background chosen to give the deeper icon room to stand out.
+- **License changed to GPL-3.0-or-later** — TS4RLS is now public/open
+  source (was closed-source/all-rights-reserved).
+- Releases now also publish **`TS4RLS_Steam_Assets.zip`**, both as a
+  release asset and to a permanent link on the `steam_assets` branch
+  (`.github/workflows/release.yml`), so the Steam artwork can be grabbed
+  without downloading a whole release or cloning the repo.
+
+### Removed
+- `launch_game`, `launch_via_steam`, `game_exe`, `create_curseforge_version`
+  config keys; the `--force-launch` flag; `assets/icon_curseforge.*`;
+  `assets/icon_dark.png`/`icon_light.png`;
+  `assets/steam/*_dark.png`/`*_light.png`.
+
 ## [3.0.0] - 2026-09-10
 
 ### Changed

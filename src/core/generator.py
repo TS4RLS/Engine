@@ -5,8 +5,8 @@ Picks a random image from your chosen folder, packages it as a valid
 Sims 4 loading screen mod (.package file), and drops it into your Mods folder.
 
 Callable API: load_config() / generate(cfg). main() is the CLI wrapper used
-when this script is run directly (dev convenience) — the GUI and cli/menu.py
-call generate() directly instead.
+when this script is run directly (dev convenience) — the GUI calls
+generate() directly instead.
 """
 
 import os
@@ -20,11 +20,9 @@ import json
 import random
 import struct
 import subprocess
-import time
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from src.common import paths
 from src.common.config_format import parse_jsonc
@@ -52,8 +50,8 @@ def _ensure_dependencies():
 _ensure_dependencies()
 
 TEMPLATE_PACKAGE = paths.resource_path(os.path.join("assets", "template.package"))
-OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
-SIMS4_STEAM_APP_ID = "1222670"
+OUTPUT_PACKAGE_NAME = "TS4RLS.package"
+LEGACY_OUTPUT_FOLDER = "RandomLoadingScreen"
 
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff"}
 
@@ -319,20 +317,24 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
 @dataclass
 class GenerateResult:
     output_path: str
-    launched: bool
-    warning: Optional[str] = None
 
 
-def generate(cfg: dict, force_launch: bool = False, log=print) -> GenerateResult:
+def find_legacy_output(mods_folder: str) -> str:
+    """Path to the old Mods/RandomLoadingScreen folder from before the
+    output was renamed to TS4RLS, or "" if it isn't there. Having both the
+    old and new package installed at once means two loading screen
+    packages are active, and only one can be in Mods at a time."""
+    legacy = os.path.join(mods_folder, LEGACY_OUTPUT_FOLDER)
+    return legacy if os.path.isdir(legacy) else ""
+
+
+def generate(cfg: dict, log=print) -> GenerateResult:
     """Generate a new random loading screen package per cfg and write it to
     the Mods folder. Raises GeneratorError on any user-facing failure."""
-    images_folder    = cfg["images_folder"]
-    mods_folder      = cfg["mods_folder"]
-    is_vertical      = cfg.get("is_vertical", True)
-    launch_game      = cfg.get("launch_game", True) or force_launch
-    rename_files     = cfg.get("rename_files", False)
-    game_exe         = cfg.get("game_exe", "")
-    launch_via_steam = cfg.get("launch_via_steam", True)
+    images_folder = cfg["images_folder"]
+    mods_folder   = cfg["mods_folder"]
+    is_vertical   = cfg.get("is_vertical", True)
+    rename_files  = cfg.get("rename_files", False)
 
     if not os.path.isdir(images_folder):
         raise GeneratorError(
@@ -352,7 +354,14 @@ def generate(cfg: dict, force_launch: bool = False, log=print) -> GenerateResult
             "  Update 'mods_folder' in config.json."
         )
 
-    output_folder = os.path.join(mods_folder, "RandomLoadingScreen")
+    legacy_folder = find_legacy_output(mods_folder)
+    if legacy_folder:
+        raise GeneratorError(
+            f"Found an old loading screen mod from a previous version:\n  {legacy_folder}\n"
+            "  Delete that folder first — only one loading screen package can be active at a time."
+        )
+
+    output_folder = os.path.join(mods_folder, "TS4RLS")
     os.makedirs(output_folder, exist_ok=True)
 
     images = find_images(images_folder)
@@ -406,20 +415,7 @@ def generate(cfg: dict, force_launch: bool = False, log=print) -> GenerateResult
     log(f"Written to: {output_path}")
     log(f"Package size: {len(package_bytes) / 1024:.1f} KB")
 
-    launched = False
-    warning = None
-    if launch_game:
-        log("\nLaunching Sims 4...")
-        if launch_via_steam:
-            subprocess.Popen(["start", f"steam://rungameid/{SIMS4_STEAM_APP_ID}"], shell=True)
-            launched = True
-        elif os.path.isfile(game_exe):
-            subprocess.Popen([game_exe])
-            launched = True
-        else:
-            warning = f"Game executable not found: {game_exe}"
-
-    return GenerateResult(output_path=output_path, launched=launched, warning=warning)
+    return GenerateResult(output_path=output_path)
 
 
 # ─── Main (CLI wrapper for direct/dev invocation) ────────────────────────────
@@ -430,38 +426,22 @@ def main():
         f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
     ))
 
-    force_launch = "--force-launch" in sys.argv
     non_interactive_flag = "--generate" in sys.argv
 
     try:
         cfg = load_config()
         non_interactive = cfg.get("non_interactive", True) or non_interactive_flag
-        result = generate(cfg, force_launch=force_launch)
+        result = generate(cfg)
     except GeneratorError as e:
         print("\n" + cli_colors.error(str(e)))
         sys.exit(1)
 
-    if result.warning:
-        print(cli_colors.warning(result.warning))
-        print("  Set game_exe or launch_via_steam in config.json.")
-
-    launch_game = cfg.get("launch_game", True) or force_launch
-    launch_msg = (
-        "The Sims 4 will now launch with your new random loading screen."
-        if result.launched else
-        "Random loading screen package created. Launch the game to see it in action."
-    )
-
     print("\nDone!")
-    print(launch_msg)
+    print(f"Random loading screen package created: {result.output_path}")
+    print("Launch the game to see it in action.")
     print("=" * 69)
 
-    if launch_game:
-        for i in range(15, 0, -1):
-            print(f"\r  Closing in {i}s...  ", end="", flush=True)
-            time.sleep(1)
-        print()
-    elif not non_interactive:
+    if not non_interactive:
         print("\n  Press any key to close...")
         try:
             import msvcrt

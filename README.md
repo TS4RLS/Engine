@@ -4,13 +4,13 @@
 
 # TS4RLS — The Sims 4 Random Loading Screen
 
-Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
+Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it, then launch the game yourself and get a fresh screen every time.
 
-**Version 3.0.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 4.0.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
-License: [Closed-source](LICENSE.md)
+License: [GPL-3.0-or-later](LICENSE.md)
 
 ---
 
@@ -42,10 +42,9 @@ Drop PNG, JPG, BMP, WebP, or TIFF images into the images folder you set up. Sub-
 - **GUI**: double-click the executable, go to the **Actions** tab, click
   **Generate loading screen**.
 - **Unattended** (scripts, other launchers, a Steam shortcut): run it with
-  `--generate` (add `--force-launch` to always launch the game regardless
-  of the `launch_game` setting). It never blocks waiting for a keypress.
+  `--generate`. It never blocks waiting for a keypress.
 
-Either way, it picks a random image, builds the mod, and optionally launches Sims 4 for you.
+Either way, it picks a random image and builds the mod. Launch Sims 4 yourself afterwards to see it.
 
 ---
 
@@ -58,15 +57,11 @@ required; everything else has a default.
 | Key | Required | Default | Description |
 |---|---|---|---|
 | `images_folder` | ✓ | — | Folder containing your source images |
-| `mods_folder` | ✓ | — | Your Sims 4 Mods folder |
+| `mods_folder` | ✓ | — | Your Sims 4 Mods folder — this is your Sims 4 game data folder with `Mods` added (e.g. `Documents/Electronic Arts/The Sims 4/Mods`), not the game's installation directory. The Settings tab pre-fills this automatically if it finds it. |
 | `is_vertical` | | `true` | When `true`, combines **2 portrait images** side-by-side into one landscape loading screen |
 | `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image |
-| `launch_game` | | `true` | Automatically launch Sims 4 after generating the mod |
-| `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt (only shown when `launch_game` is `false`) |
-| `launch_via_steam` | | `true` | Launch via Steam (`steam://rungameid/...`) |
-| `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
+| `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt |
 | `target_width` / `target_height` | | `1920` / `1080` | Loading screen output size |
-| `create_curseforge_version` | | `false` | Whether `src/build/executable_builder.py` also builds the CurseForge (`TS4_x64`) executable — dev/build-time only |
 
 ### Vertical mode
 
@@ -74,23 +69,17 @@ When `is_vertical` is `true`, the app randomly picks **two portrait-oriented ima
 
 ---
 
-## CurseForge pre-launch script
-
-A copy of the same executable, named **`TS4_x64`**/`TS4_x64.exe`
-(mirroring Sims 4's own game executable) and using a plumbob-style icon
-that mimics Sims 4's own game icon rather than the TS4RLS brand icon,
-automatically generates a new loading screen and launches the game with no
-arguments needed — use it as your CurseForge pre-launch script. See
-[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for how to build it yourself.
-
----
-
 ## Steam artwork
 
-`assets/steam/` has a full set of custom Steam library artwork for the
-non-Steam-game shortcut — see **[docs/STEAM_GUIDE.md](docs/STEAM_GUIDE.md)**
-for the asset list and how to apply it, or use the **Save Steam artwork
-(.zip)...** button on the app's About tab if you don't have the source repo.
+`assets/steam/` has a full set of custom Steam library artwork for adding
+TS4RLS to your Steam library as a non-Steam game — see
+**[docs/STEAM_GUIDE.md](docs/STEAM_GUIDE.md)** for the asset list and how to
+apply it.
+
+**[⬇ Download TS4RLS_Steam_Assets.zip](https://github.com/TS4RLS/Engine/raw/steam_assets/TS4RLS_Steam_Assets.zip)**
+— always up to date with the latest release, no need to clone the repo.
+(Also available from the About tab's **Save Steam artwork (.zip)...** button,
+or as an asset on any [Release](https://github.com/TS4RLS/Engine/releases).)
 
 ---
 
@@ -101,7 +90,7 @@ The Sims 4 loading screen is a `.package` file (DBPF 2.0 format) containing a si
 1. Scans `images_folder` and picks one image at random (or two, in vertical mode)
 2. Resizes and centre-crops to match the template's resolution
 3. Splices the new image into the template's GFX resource
-4. Writes `RandomLoadingScreen.package` to `Mods/RandomLoadingScreen/`
+4. Writes `TS4RLS.package` to `Mods/TS4RLS/`
 
 The output won't conflict with other mods as long as no other loading screen `.package` exists in your Mods folder — only one can be active at a time.
 
@@ -131,12 +120,11 @@ just download the executable above.
 - Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) for
   a small dev menu: open the app, build the executable(s), or run the test
   suite.
-- `python gui.py` (GUI) or `python gui.py --generate [--force-launch]`
-  (headless) run the app directly without building anything.
+- `python gui.py` (GUI) or `python gui.py --generate` (headless) run the
+  app directly without building anything.
 - `python src/build/executable_builder.py` builds `TS4RLS`(`.exe`) into
-  `dist/`, and, if `create_curseforge_version` is `true` in `config.json`,
-  `TS4_x64`(`.exe`) too. PyInstaller can't cross-compile, so build on each
-  platform you want a native executable for.
+  `dist/`. PyInstaller can't cross-compile, so build on each platform you
+  want a native executable for.
 - `pytest -v` runs the test suite (`.github/workflows/ci.yml` runs the same
   on every push/PR).
 
@@ -150,10 +138,8 @@ layout and release flow.
 These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
-- `icon.ico` / `icon.icns` / `icon.png` — the app's icon (window icon and the main executable's icon)
-- `icon_curseforge.ico` / `icon_curseforge.icns` / `icon_curseforge.png` — icon for the `TS4_x64` build, styled to mimic Sims 4's own game icon
+- `icon.ico` / `icon.icns` / `icon.png` — the app's icon (window icon and the executable's icon)
 - `logo.png` — the wordmark logo
-- `icon_dark.png` / `icon_light.png` — icon source for `assets/steam/*_dark.png`/`*_light.png` only (Steam's own theme option, unrelated to the app's own icon above)
 
 ---
 

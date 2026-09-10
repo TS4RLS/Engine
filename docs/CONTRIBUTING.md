@@ -21,10 +21,8 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 
 ```
 gui.py    single entry point at the repo root — the tkinter GUI, and
-          (--generate [--force-launch]) a headless one-shot run. Detects
-          the running executable's own filename for the CurseForge
-          disguise. This is what gets compiled into the distributed
-          executable(s).
+          (--generate) a headless one-shot run. This is what gets compiled
+          into the distributed executable.
 src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
             location resolution)
@@ -59,22 +57,16 @@ whole test session; see `tests/conftest.py`). No test touches your real
 request.
 
 For anything the test suite doesn't cover (the actual `.package` output
-loading correctly in-game, the executable build, launch-via-Steam behavior),
-verify manually:
+loading correctly in-game, the executable build), verify manually:
 
 - Run `python gui.py --generate` (or `Launcher.bat`/`Launcher.sh --generate`)
   against a real `images_folder`/`mods_folder` and confirm the loading
   screen changes in-game. `python gui.py` with no args opens the GUI.
 - If you touched `src/build/executable_builder.py`, rebuild the
-  executable(s) locally (`python src/build/executable_builder.py`) and
+  executable locally (`python src/build/executable_builder.py`) and
   confirm the built app in `dist/` still launches (GUI by default,
   `--generate` from a terminal) and produces the same result as running
   `gui.py` directly.
-- If you touched launch behavior (`launch_game`, `launch_via_steam`,
-  `game_exe`, CurseForge/`.curseclient` handling), confirm both the
-  Steam and direct-exe launch paths still behave as configured, and that
-  a copy of the built exe renamed to `TS4_x64`/`TS4_x64.exe` still
-  auto-generates and force-launches with no arguments.
 
 ## Versioning
 
@@ -101,7 +93,5 @@ redacted if needed), and what you expected vs. what happened.
 
 ## License
 
-This project is closed-source; see [LICENSE.md](../LICENSE.md). No license
-is granted to third parties by default, and pull requests are accepted at
-the author's discretion — by submitting one, you agree your contribution
-may be used under the same terms as the rest of the project.
+TS4RLS is licensed under the [GPL-3.0-or-later](../LICENSE.md). By
+contributing, you agree your contribution is licensed under the same terms.

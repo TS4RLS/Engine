@@ -6,7 +6,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 :: End users should use the built TS4RLS(.exe)/TS4_x64 executable instead
 :: (see src/build/executable_builder.py, dist/ once built). Pass
 :: --generate here to skip straight to generating a loading screen, e.g.:
-::   Launcher.bat --generate [--force-launch]
+::   Launcher.bat --generate
 :: ─────────────────────────────────────────────────────────────────
 
 :: ── Colors (ANSI, supported by cmd.exe on Windows 10+) ─────────────

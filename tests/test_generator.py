@@ -237,7 +237,6 @@ def test_generate_missing_images_folder_raises(tmp_path):
     cfg = {
         "images_folder": str(tmp_path / "missing"),
         "mods_folder": str(tmp_path / "mods"),
-        "launch_game": False,
     }
     with pytest.raises(generator.GeneratorError):
         generator.generate(cfg)
@@ -248,12 +247,12 @@ def test_generate_no_images_found_raises(tmp_path):
     images.mkdir()
     mods = tmp_path / "mods"
     mods.mkdir()
-    cfg = {"images_folder": str(images), "mods_folder": str(mods), "launch_game": False}
+    cfg = {"images_folder": str(images), "mods_folder": str(mods)}
     with pytest.raises(generator.GeneratorError):
         generator.generate(cfg)
 
 
-def test_generate_writes_package_and_does_not_launch(tmp_path):
+def test_generate_writes_package(tmp_path):
     images = tmp_path / "images"
     images.mkdir()
     Image.new("RGB", (300, 300), (10, 20, 30)).save(images / "a.png")
@@ -264,11 +263,8 @@ def test_generate_writes_package_and_does_not_launch(tmp_path):
     cfg = {
         "images_folder": str(images),
         "mods_folder": str(mods),
-        "launch_game": False,
         "is_vertical": True,
     }
     result = generator.generate(cfg, log=lambda *a, **k: None)
 
     assert os.path.isfile(result.output_path)
-    assert result.launched is False
-    assert result.warning is None

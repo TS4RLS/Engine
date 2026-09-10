@@ -40,6 +40,14 @@ double-click **`Launcher.exe`**, which skips the menu and generates directly.
 Either way, it picks a random image, builds the mod, and optionally launches
 Sims 4 for you.
 
+For fully unattended use (scripts, other launchers, CI), pass `--generate`
+directly — `Launcher.bat --generate` / `./Launcher.sh --generate` — which
+skips the menu and, when the game isn't being launched, the final
+"press any key to close" prompt too, so it needs no input and exits as
+soon as it's done. Add `--force-launch` to also launch the game regardless
+of `launch_game` in `config.json`. This is exactly how
+`Launcher.exe`/`TS4_x64.exe` invoke it.
+
 ---
 
 ## Configuration
@@ -80,11 +88,11 @@ together. PyInstaller is installed automatically if needed. PyInstaller can't
 cross-compile, so run the builder on each platform you want a native build
 for.
 
-On Windows, if `create_curseforge_version` is `true` in `config.json`, a
-second exe, **`TS4_x64.exe`**, is also built using `assets/alt_icon.ico`. It
-behaves identically but always launches the game, for use as a CurseForge
-pre-launch script. This variant is Windows/CurseForge-specific and is
-skipped on macOS/Linux.
+If `create_curseforge_version` is `true` in `config.json`, a second
+executable, **`TS4_x64`** (`TS4_x64.exe` on Windows), is also built using
+`assets/alt_icon.ico`/`.icns` — the name mirrors Sims 4's own game
+executable on each platform. It behaves identically but always launches the
+game, for use as a CurseForge pre-launch script.
 
 ---
 
@@ -161,7 +169,7 @@ These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
 - `icon.ico` / `icon.icns` — icon embedded into `Launcher.exe`/`Launcher` at build time
-- `alt_icon.ico` — icon embedded into `TS4_x64.exe` at build time
+- `alt_icon.ico` / `alt_icon.icns` — icon embedded into `TS4_x64`/`TS4_x64.exe` at build time
 
 ---
 

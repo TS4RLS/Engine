@@ -5,6 +5,23 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.3.3] - 2026-09-10
+
+### Added
+- **Cross-platform CurseForge build** — `src/executable_builder.py` now
+  also builds the `TS4_x64` CurseForge pre-launch executable on macOS/Linux
+  (using `assets/alt_icon.icns` on macOS), instead of skipping it outside
+  Windows. The name mirrors Sims 4's own game executable on each platform.
+- **Fully unattended generation** — `src/package_generator.py` no longer
+  blocks on the final "press any key to close" prompt when invoked via
+  `--generate` (as `Launcher.bat`/`Launcher.sh --generate` and the built
+  executables all do) and `launch_game` is off, so it can run with zero
+  input from scripts, other launchers, or CI.
+
+### Changed
+- **`assets/logo.png`** — regenerated from the same higher-resolution icon
+  source as the Steam artwork, for a crisper README header logo.
+
 ## [1.3.2] - 2026-09-10
 
 ### Changed

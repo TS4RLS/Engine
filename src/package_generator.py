@@ -81,6 +81,7 @@ IMAGES_FOLDER       = _cfg["images_folder"]
 MODS_FOLDER         = _cfg["mods_folder"]
 IS_VERTICAL         = _cfg.get("is_vertical", True)
 LAUNCH_GAME         = _cfg.get("launch_game", True) or "--force-launch" in sys.argv
+NON_INTERACTIVE     = "--generate" in sys.argv
 GAME_EXE            = _cfg.get("game_exe", "")
 LAUNCH_VIA_STEAM    = _cfg.get("launch_via_steam", True)
 TARGET_WIDTH        = _cfg.get("target_width", 1920)
@@ -430,7 +431,7 @@ def main():
             print(f"\r  Closing in {i}s...  ", end="", flush=True)
             time.sleep(1)
         print()
-    else:
+    elif not NON_INTERACTIVE:
         print("\n  Press any key to close...")
         try:
             import msvcrt

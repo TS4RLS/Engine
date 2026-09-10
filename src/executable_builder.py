@@ -14,11 +14,11 @@ menu), so you never need to rebuild unless you want a fresh executable —
 editing Launcher.bat/Launcher.sh/src/package_generator.py is enough for day-to-day
 changes.
 
-On Windows, if config.json has "create_curseforge_version": true, a second
-exe named TS4_x64.exe is also built. It behaves identically but never
-launches the game, regardless of the launch_game setting in config.json.
-This variant is Windows/CurseForge-specific and is skipped on other
-platforms.
+If config.json has "create_curseforge_version": true, a second executable
+named TS4_x64 (TS4_x64.exe on Windows) is also built — mirroring the
+filename of Sims 4's own game executable on each platform. It behaves
+identically but always launches the game, regardless of the launch_game
+setting in config.json, for use as a CurseForge pre-launch script.
 """
 
 import json
@@ -97,6 +97,27 @@ _LAUNCHER_CODE_UNIX = textwrap.dedent("""\
         sys.exit(1)
 
     subprocess.run(['bash', sh, '--generate'], cwd=base)
+""")
+
+# CurseForge launcher for macOS/Linux: same but also passes --force-launch so
+# the game always starts, regardless of the launch_game setting in
+# config.json.
+_CURSEFORGE_LAUNCHER_CODE_UNIX = textwrap.dedent("""\
+    import os, sys, subprocess
+
+    base = os.path.dirname(sys.executable if getattr(sys, 'frozen', False)
+                           else os.path.abspath(__file__))
+    sh = os.path.join(base, 'Launcher.sh')
+
+    if not os.path.isfile(sh):
+        print(
+            f"Cannot find Launcher.sh:\\n{sh}\\n\\n"
+            "Make sure this executable is in the same folder as Launcher.sh.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    subprocess.run(['bash', sh, '--generate', '--force-launch'], cwd=base)
 """)
 
 
@@ -215,15 +236,10 @@ def build():
 
     cfg = _load_build_config()
     if cfg.get("create_curseforge_version", False):
-        if not IS_WINDOWS:
-            print(
-                "\n[SKIPPED] create_curseforge_version is Windows/CurseForge-specific "
-                "(the TS4_x64.exe disguise) — skipping on this platform."
-            )
-        else:
-            cf_path = _build_exe("TS4_x64", _CURSEFORGE_LAUNCHER_CODE_WINDOWS, _icon_args("alt_icon"))
-            print(f"\nCurseForge version ready: {cf_path}")
-            print("This exe always launches the game — use it as your CurseForge pre-launch script.")
+        cf_code = _CURSEFORGE_LAUNCHER_CODE_WINDOWS if IS_WINDOWS else _CURSEFORGE_LAUNCHER_CODE_UNIX
+        cf_path = _build_exe("TS4_x64", cf_code, _icon_args("alt_icon"))
+        print(f"\nCurseForge version ready: {cf_path}")
+        print("This always launches the game — use it as your CurseForge pre-launch script.")
 
 
 if __name__ == "__main__":

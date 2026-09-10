@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.3.2] - 2026-09-10
+
+### Changed
+- **`assets/steam/background*.png`** — the library hero is now a text-free
+  background made of a scattered pattern of the app icon (or `alt_icon` for
+  the `_alt` variant), since Steam draws the logo/title over the hero
+  separately; it no longer duplicates the "SIMS 4 / RANDOM LOADING SCREENS"
+  wordmark itself.
+- **`assets/steam/cover*.png`, `wide_cover*.png`** — now use the same
+  scattered icon pattern as their background, behind the existing
+  icon/title/subtitle artwork, instead of a plain gradient.
+
 ## [1.3.1] - 2026-09-10
 
 ### Removed

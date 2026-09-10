@@ -5,6 +5,30 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.3.0] - 2026-09-10
+
+### Added
+- **`build.sh`/`build.bat`**: thin wrappers for
+  `src/build/executable_builder.py`, matching the sibling `commit.sh`/
+  `commit.bat` pair. `.github/workflows/release.yml` now calls `./build.sh`
+  too, so CI and a local build go through the exact same entry point.
+
+### Fixed
+- **The main window no longer flashes visible before the first-launch
+  disclaimer.** It now stays withdrawn (`self.withdraw()`) until the
+  disclaimer is confirmed (or the whole app exits, if declined), instead
+  of appearing and building all its tabs before the modal dialog covered it.
+- **Disclaimer dialog relaid out to match TWRAR's own**: centered logo
+  (the full wordmark, not just the icon), title, and body text; title
+  changed from "Before you start" to "Before you continue" (also now the
+  window title, replacing "Welcome to TS4RLS"); tighter, more consistent
+  spacing; the dialog now centers on the screen instead of over the main
+  window, since the main window has no real position yet while withdrawn.
+  It already inherited the sv_ttk dark/light theme correctly (added in
+  4.2.0) but is now given an explicit background too, matching the
+  theme's panel color, since the previous flash-of-mismatched-background
+  read as "not colored like the website".
+
 ## [4.2.1] - 2026-09-10
 
 ### Removed

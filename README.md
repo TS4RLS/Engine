@@ -6,7 +6,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it, then launch the game yourself and get a fresh screen every time.
 
-**Version 4.2.1** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 4.3.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -123,7 +123,7 @@ just download the executable above.
   (`Pillow`/`sv_ttk`/`PyInstaller` are also installed automatically if missing).
 - `python gui.py` (GUI) or `python gui.py --generate` (headless) run the
   app directly without building anything.
-- `python src/build/executable_builder.py` builds `TS4RLS`(`.exe`) into
+- `./build.sh` (or `build.bat` on Windows) builds `TS4RLS`(`.exe`) into
   `dist/`. PyInstaller can't cross-compile, so build on each platform you
   want a native executable for.
 - `pytest -v` runs the test suite (`.github/workflows/ci.yml` runs the same

@@ -44,7 +44,7 @@ jobs:
 
       - name: Build executable
         shell: bash
-        run: python src/build/executable_builder.py
+        run: ./build.sh
 
       - name: Collect build artifacts
         shell: bash

@@ -19,9 +19,10 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 ## Project layout
 
 ```
-gui.py    single entry point at the repo root — the tkinter GUI (Home,
-          Build, About tabs), and (--generate) a headless one-shot run.
-          This is what gets compiled into the distributed executable.
+gui.py       single entry point at the repo root — the tkinter GUI (Home,
+             Build, About tabs), and (--generate) a headless one-shot run.
+             This is what gets compiled into the distributed executable.
+build.sh/.bat  thin wrapper for src/build/executable_builder.py
 src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
             location resolution), app_state.py (disclaimer flag + recent
@@ -35,7 +36,7 @@ dist/       built executables land here (gitignored) — not the repo root
 
 There is no text-menu CLI — the GUI is the only interactive interface.
 Run `python gui.py` from source to launch it directly; end users instead
-download the executable built by `src/build/executable_builder.py`.
+download the executable built by `./build.sh`/`build.bat`.
 
 ## Making a change
 
@@ -61,10 +62,9 @@ loading correctly in-game, the executable build), verify manually:
   `images_folder`/`mods_folder` and confirm the loading
   screen changes in-game. `python gui.py` with no args opens the GUI.
 - If you touched `src/build/executable_builder.py`, rebuild the
-  executable locally (`python src/build/executable_builder.py`) and
-  confirm the built app in `dist/` still launches (GUI by default,
-  `--generate` from a terminal) and produces the same result as running
-  `gui.py` directly.
+  executable locally (`./build.sh`/`build.bat`) and confirm the built app
+  in `dist/` still launches (GUI by default, `--generate` from a
+  terminal) and produces the same result as running `gui.py` directly.
 
 ## Versioning
 

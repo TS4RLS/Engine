@@ -36,6 +36,7 @@ _DATA_SEP = ";" if IS_WINDOWS else ":"
 _BUNDLED_DATA = [
     (os.path.join("assets", "template.package"), "assets"),
     (os.path.join("assets", "icon.png"), "assets"),
+    (os.path.join("assets", "logo.png"), "assets"),
     (os.path.join("assets", "author.png"), "assets"),
     (os.path.join("assets", "steam"), os.path.join("assets", "steam")),
     ("VERSION.md", "."),

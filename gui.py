@@ -80,7 +80,7 @@ HINT_COLOR = "#8f8f8f"
 ERROR_DARK = "#d98c8c"
 ERROR_LIGHT = "#b3312f"
 
-DISCLAIMER_TITLE = "Before you start"
+DISCLAIMER_TITLE = "Before you continue"
 DISCLAIMER_TEXT = (
     "TS4RLS is an unofficial, independent tool. It is not affiliated with, "
     "endorsed by, or sponsored by Electronic Arts or Maxis.\n\n"
@@ -111,6 +111,11 @@ def find_python() -> str:
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        # Stay hidden until the first-launch disclaimer (if any) is
+        # resolved -- see the end of __init__ -- so the main window never
+        # flashes on screen before it.
+        self.withdraw()
 
         self.title(f"TS4RLS - The Sims 4 Random Loading Screen v{_get_version()}")
         self.geometry("780x640")
@@ -158,6 +163,7 @@ class App(tk.Tk):
 
         if not app_state.is_disclaimer_confirmed():
             self._show_disclaimer()
+        self.deiconify()
 
     def _set_window_icon(self):
         icon_path = paths.resource_path(os.path.join("assets", "icon.png"))
@@ -261,43 +267,50 @@ class App(tk.Tk):
     # ── First-launch disclaimer ─────────────────────────────────────────
 
     def _show_disclaimer(self):
+        """Modal first-launch gate, laid out like TWRAR's own disclaimer
+        dialog: centered logo, title, body, and buttons, shown before the
+        main window (which stays withdrawn until this resolves)."""
         dialog = tk.Toplevel(self)
-        dialog.title("Welcome to TS4RLS")
+        dialog.configure(bg=self._panel_bg())
+        dialog.title(DISCLAIMER_TITLE)
         dialog.transient(self)
         dialog.resizable(False, False)
         dialog.protocol("WM_DELETE_WINDOW", lambda: self._exit_from_disclaimer(dialog))
 
-        frame = ttk.Frame(dialog, padding=20)
+        frame = ttk.Frame(dialog, padding=(24, 20))
         frame.pack(fill="both", expand=True)
 
-        logo_path = paths.resource_path(os.path.join("assets", "icon.png"))
+        logo_path = paths.resource_path(os.path.join("assets", "logo.png"))
         try:
             logo = tk.PhotoImage(file=logo_path)
-            logo = logo.subsample(max(1, logo.width() // 64), max(1, logo.height() // 64))
+            factor = max(1, logo.height() // 96)
+            logo = logo.subsample(factor, factor)
             logo_label = ttk.Label(frame, image=logo)
             logo_label.image = logo  # keep a reference alive
-            logo_label.pack(pady=(0, 10))
+            logo_label.pack(pady=(0, 12))
         except Exception:
             pass
 
-        ttk.Label(frame, text=DISCLAIMER_TITLE, font=("", 13, "bold")).pack(pady=(0, 10))
-        ttk.Label(frame, text=DISCLAIMER_TEXT, wraplength=420, justify="left").pack(pady=(0, 16))
+        ttk.Label(frame, text=DISCLAIMER_TITLE, font=("", 14, "bold"), justify="center").pack(pady=(0, 12))
+        ttk.Label(frame, text=DISCLAIMER_TEXT, wraplength=420, justify="center").pack(pady=(0, 12))
 
         buttons = ttk.Frame(frame)
-        buttons.pack(fill="x")
-        ttk.Button(
+        buttons.pack()
+        continue_btn = ttk.Button(
             buttons, text="I understand — Continue",
             command=lambda: self._confirm_disclaimer(dialog),
-        ).pack(side="right")
+        )
+        continue_btn.pack(side="right")
         ttk.Button(
             buttons, text="Exit",
             command=lambda: self._exit_from_disclaimer(dialog),
         ).pack(side="right", padx=(0, 8))
+        continue_btn.focus_set()
 
         self.update_idletasks()
         dialog.update_idletasks()
-        x = self.winfo_x() + (self.winfo_width() - dialog.winfo_width()) // 2
-        y = self.winfo_y() + (self.winfo_height() - dialog.winfo_height()) // 2
+        x = (self.winfo_screenwidth() - dialog.winfo_width()) // 2
+        y = (self.winfo_screenheight() - dialog.winfo_height()) // 2
         dialog.geometry(f"+{max(x, 0)}+{max(y, 0)}")
 
         dialog.grab_set()

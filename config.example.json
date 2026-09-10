@@ -20,7 +20,5 @@
     // Loading screen output height
     "target_height": 1080,
     // Also build the TS4_x64 CurseForge pre-launch executable
-    "create_curseforge_version": false,
-    // Which brand icon the built app executable uses: "dark" or "light"
-    "app_icon": "dark"
+    "create_curseforge_version": false
 }

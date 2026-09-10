@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="../assets/logo.png" width="500" alt="Sims 4 Random Loading Screen">
+  <img src="../assets/logo.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
 </p>
 
-# Contributing to Sims 4 Random Loading Screen
+# Contributing to TS4RLS
 
 Personal tool for generating a randomized Sims 4 loading screen mod.
 
@@ -12,28 +12,30 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 2. `pip install -r requirements.txt` (installs `pytest` and `Pillow`;
    `Pillow` and `PyInstaller` are also installed automatically on first
    run of the dev launcher/exe builder if missing)
-3. Run `Launcher.bat`/`Launcher.sh` once and pick **1) Open interactive
-   menu** — it walks you through the quick-setup wizard on first run and
-   writes `config.json` for you. (See the [README](../README.md) for the
-   full option list if you'd rather edit it by hand, or copy
-   `config.example.json`.)
+3. Run `Launcher.bat`/`Launcher.sh` once and pick **1) Launch the GUI** —
+   the Settings tab writes `config.json` for you. (See the
+   [README](../README.md) for the full option list if you'd rather edit it
+   by hand, or copy `config.example.json`.)
 
 ## Project layout
 
 ```
+gui.py    single entry point at the repo root — the tkinter GUI, and
+          (--generate [--force-launch]) a headless one-shot run. Detects
+          the running executable's own filename for the CurseForge
+          disguise. This is what gets compiled into the distributed
+          executable(s).
 src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
-            location resolution), theme.py (OS dark-mode detection)
+            location resolution)
   core/     generator.py (the actual mod generation logic), renamer.py
-  cli/      cli_colors.py, config_editor.py, info_guide.py, menu.py
-            (the interactive text menu)
+  cli/      cli_colors.py, config_editor.py (config.json read/write
+            helpers used by the GUI and the build script)
   build/    executable_builder.py
-  gui.py    the tkinter GUI
-  app.py    single entry point — dispatches to the GUI, --cli, or
-            --generate depending on arguments (and on the running
-            executable's filename, for the CurseForge disguise)
+dist/       built executables land here (gitignored) — not the repo root
 ```
 
+There is no text-menu CLI — the GUI is the only interactive interface.
 `Launcher.bat`/`Launcher.sh` are the from-source dev entry point (a small
 menu for running/building/testing without installing anything extra).
 They're not what end users download — that's the executable built by
@@ -60,14 +62,14 @@ For anything the test suite doesn't cover (the actual `.package` output
 loading correctly in-game, the executable build, launch-via-Steam behavior),
 verify manually:
 
-- Run `python src/app.py --cli` (or `Launcher.bat`/`Launcher.sh`) against a
-  real `images_folder`/`mods_folder` and confirm the loading screen
-  changes in-game. `python src/app.py` with no args opens the GUI.
+- Run `python gui.py --generate` (or `Launcher.bat`/`Launcher.sh --generate`)
+  against a real `images_folder`/`mods_folder` and confirm the loading
+  screen changes in-game. `python gui.py` with no args opens the GUI.
 - If you touched `src/build/executable_builder.py`, rebuild the
   executable(s) locally (`python src/build/executable_builder.py`) and
-  confirm the built app still launches (GUI by default, `--cli`/
+  confirm the built app in `dist/` still launches (GUI by default,
   `--generate` from a terminal) and produces the same result as running
-  `src/app.py` directly.
+  `gui.py` directly.
 - If you touched launch behavior (`launch_game`, `launch_via_steam`,
   `game_exe`, CurseForge/`.curseclient` handling), confirm both the
   Steam and direct-exe launch paths still behave as configured, and that
@@ -94,8 +96,8 @@ comments) don't need a bump.
 ## Reporting a bug
 
 Open an issue with your OS, Python version (if not using the executable),
-the path shown in the app's About tab/`info` menu for your config file
-(with values redacted if needed), and what you expected vs. what happened.
+the path shown in the app's About tab for your config file (with values
+redacted if needed), and what you expected vs. what happened.
 
 ## License
 

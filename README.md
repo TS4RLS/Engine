@@ -1,15 +1,12 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo_dark.png">
-    <img src="assets/logo_light.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
-  </picture>
+  <img src="assets/logo.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
 </p>
 
 # TS4RLS — The Sims 4 Random Loading Screen
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
 
-**Version 2.0.4** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 3.0.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -19,14 +16,15 @@ License: [Closed-source](LICENSE.md)
 
 ## Download
 
-Grab the latest **`Sims4RandomLoadingScreen`** executable from the
+Grab the latest **`TS4RLS`** executable from the
 [Releases page](https://github.com/TS4RLS/Engine/releases) —
 it's a single self-contained file, nothing else to install. Double-click it
-for a GUI, or run it from a terminal with `--cli` for a text menu.
+for the GUI, or run it from a terminal with `--generate` for a headless
+one-shot run.
 
-- **First run** walks you through a quick setup wizard (images folder, Mods
-  folder, and a handful of optional settings) and saves it for you — no
-  manual config file editing required.
+- **First run**: the Settings tab lets you set your images folder, Mods
+  folder, and a handful of optional settings — no manual config file
+  editing required.
 - Settings are stored per-user (Windows: `%APPDATA%`, macOS:
   `~/Library/Application Support`, Linux: `~/.config`), so the app works
   the same no matter where you put the executable.
@@ -43,7 +41,6 @@ Drop PNG, JPG, BMP, WebP, or TIFF images into the images folder you set up. Sub-
 
 - **GUI**: double-click the executable, go to the **Actions** tab, click
   **Generate loading screen**.
-- **Text menu**: run it with `--cli` and choose **1) Generate**.
 - **Unattended** (scripts, other launchers, a Steam shortcut): run it with
   `--generate` (add `--force-launch` to always launch the game regardless
   of the `launch_game` setting). It never blocks waiting for a keypress.
@@ -54,10 +51,9 @@ Either way, it picks a random image, builds the mod, and optionally launches Sim
 
 ## Configuration
 
-Use the **Settings** tab (GUI) or the **Configure settings** option
-(text menu) to change anything — both read and write the same config file.
-Only `images_folder` and `mods_folder` are required; everything else has a
-default.
+Use the **Settings** tab to change anything — it reads and writes
+`config.json` directly. Only `images_folder` and `mods_folder` are
+required; everything else has a default.
 
 | Key | Required | Default | Description |
 |---|---|---|---|
@@ -71,7 +67,6 @@ default.
 | `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
 | `target_width` / `target_height` | | `1920` / `1080` | Loading screen output size |
 | `create_curseforge_version` | | `false` | Whether `src/build/executable_builder.py` also builds the CurseForge (`TS4_x64`) executable — dev/build-time only |
-| `app_icon` | | `"dark"` | Which brand icon (`"dark"` or `"light"`) the built app executable uses — dev/build-time only |
 
 ### Vertical mode
 
@@ -116,8 +111,8 @@ The output won't conflict with other mods as long as no other loading screen `.p
 
 | Problem | Fix |
 |---|---|
-| `config.json not found` | Run the app — the setup wizard runs automatically the first time |
-| `config.json missing required key` | Use the Settings tab / Configure settings option to fill it in |
+| `config.json not found` | Run the app and fill in the Settings tab — it's created on first save |
+| `config.json missing required key` | Use the Settings tab to fill it in |
 | `Images folder not found` | Update `images_folder` in Settings |
 | `Mods folder not found` | Update `mods_folder` in Settings |
 | `No images found` | Check the folder path and that your files are PNG/JPG/BMP/WebP/TIFF |
@@ -136,14 +131,12 @@ just download the executable above.
 - Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) for
   a small dev menu: open the app, build the executable(s), or run the test
   suite.
-- `python src/app.py` (GUI), `python src/app.py --cli` (text menu), or
-  `python src/app.py --generate [--force-launch]` (headless) run the app
-  directly without building anything.
-- `python src/build/executable_builder.py` builds
-  `Sims4RandomLoadingScreen`(`.exe`) and, if `create_curseforge_version` is
-  `true` in `config.json`, `TS4_x64`(`.exe`) too. PyInstaller can't
-  cross-compile, so build on each platform you want a native executable
-  for.
+- `python gui.py` (GUI) or `python gui.py --generate [--force-launch]`
+  (headless) run the app directly without building anything.
+- `python src/build/executable_builder.py` builds `TS4RLS`(`.exe`) into
+  `dist/`, and, if `create_curseforge_version` is `true` in `config.json`,
+  `TS4_x64`(`.exe`) too. PyInstaller can't cross-compile, so build on each
+  platform you want a native executable for.
 - `pytest -v` runs the test suite (`.github/workflows/ci.yml` runs the same
   on every push/PR).
 
@@ -157,10 +150,10 @@ layout and release flow.
 These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
-- `icon_dark.ico` / `icon_dark.icns` / `icon_dark.png` — the app's default icon and the GUI's dark-mode branding
-- `icon_light.ico` / `icon_light.icns` / `icon_light.png` — the app's alternate icon (`app_icon: "light"`) and the GUI's light-mode branding
+- `icon.ico` / `icon.icns` / `icon.png` — the app's icon (window icon and the main executable's icon)
 - `icon_curseforge.ico` / `icon_curseforge.icns` / `icon_curseforge.png` — icon for the `TS4_x64` build, styled to mimic Sims 4's own game icon
-- `logo_dark.png` / `logo_light.png` — the wordmark logo (for dark/light-background contexts respectively)
+- `logo.png` — the wordmark logo
+- `icon_dark.png` / `icon_light.png` — icon source for `assets/steam/*_dark.png`/`*_light.png` only (Steam's own theme option, unrelated to the app's own icon above)
 
 ---
 

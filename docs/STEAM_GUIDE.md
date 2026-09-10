@@ -15,7 +15,7 @@ library grid requirements.
 
 Each slot has a **dark** version and a **light** version — pick whichever
 looks better against your own Steam library theme/background; both work
-for either the `Sims4RandomLoadingScreen`/`.exe` or `TS4_x64`/`.exe`
+for either the `TS4RLS`/`.exe` or `TS4_x64`/`.exe`
 shortcut. (`TS4_x64`'s own executable icon is a separate, plumbob-style
 icon that mimics Sims 4's own game icon — see `assets/icon_curseforge.*` —
 unrelated to which Steam artwork set you pick here.)
@@ -26,7 +26,7 @@ you like.
 
 ## Applying the artwork
 
-1. Add the executable (`Sims4RandomLoadingScreen.exe` or `TS4_x64.exe`) to
+1. Add the executable (`TS4RLS.exe` or `TS4_x64.exe`) to
    Steam as a non-Steam game:
    **Steam → Games → Add a Non-Steam Game to My Library**.
 2. In your Library, right-click the new entry → **Manage** →

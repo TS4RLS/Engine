@@ -1,7 +1,7 @@
 #!/bin/bash
 # Dev launcher for running this project from source (contributors).
-# End users should use the built Sims4RandomLoadingScreen/TS4_x64
-# executable instead (see src/build/executable_builder.py). Pass
+# End users should use the built TS4RLS/TS4_x64 executable instead
+# (see src/build/executable_builder.py, dist/ once built). Pass
 # --generate here to skip straight to generating a loading screen, e.g.:
 #   ./Launcher.sh --generate [--force-launch]
 
@@ -63,7 +63,7 @@ if ! "$PYTHON" -c "import PIL" >/dev/null 2>&1; then
 fi
 
 if [ "$1" = "--generate" ]; then
-    "$PYTHON" "$ROOT/src/app.py" "$@"
+    "$PYTHON" "$ROOT/gui.py" "$@"
     status=$?
     if [ $status -ne 0 ]; then
         printf "\n%b[ERROR] Something went wrong. See message above.%b\n" "$C_RED" "$C_RESET"
@@ -83,35 +83,27 @@ menu() {
     echo "                     Built & Maintained by StuxieDev"
     printf "%b---------------------------------------------------------------------%b\n" "$C_CYAN" "$C_RESET"
     echo
-    printf "      %b1)%b Open interactive menu (generate, rename, configure, info)\n" "$C_GREEN" "$C_RESET"
-    printf "      %b2)%b Launch the GUI\n" "$C_GREEN" "$C_RESET"
-    printf "      %b3)%b Build launcher executable(s)\n" "$C_GREEN" "$C_RESET"
-    printf "      %b4)%b Run test suite\n" "$C_GREEN" "$C_RESET"
-    printf "      %b5)%b Exit\n" "$C_GREEN" "$C_RESET"
+    printf "      %b1)%b Launch the GUI\n" "$C_GREEN" "$C_RESET"
+    printf "      %b2)%b Build launcher executable(s)\n" "$C_GREEN" "$C_RESET"
+    printf "      %b3)%b Run test suite\n" "$C_GREEN" "$C_RESET"
+    printf "      %b4)%b Exit\n" "$C_GREEN" "$C_RESET"
     echo
-    read -rp "    Select an option [1-5]: " choice
+    read -rp "    Select an option [1-4]: " choice
 
     case "$choice" in
         1)
-            "$PYTHON" "$ROOT/src/app.py" --cli
+            "$PYTHON" "$ROOT/gui.py"
             [ $? -ne 0 ] && printf "%b[ERROR] Something went wrong — see message above.%b\n" "$C_RED" "$C_RESET"
-            echo
-            pause
             menu
             ;;
         2)
-            "$PYTHON" "$ROOT/src/app.py"
-            [ $? -ne 0 ] && printf "%b[ERROR] Something went wrong — see message above.%b\n" "$C_RED" "$C_RESET"
-            menu
-            ;;
-        3)
             "$PYTHON" "$ROOT/src/build/executable_builder.py"
             [ $? -ne 0 ] && printf "%b[ERROR] Build failed — see message above.%b\n" "$C_RED" "$C_RESET"
             echo
             pause
             menu
             ;;
-        4)
+        3)
             if ! "$PYTHON" -c "import pytest" >/dev/null 2>&1; then
                 printf "%bpytest not found — installing...%b\n" "$C_YELLOW" "$C_RESET"
                 if ! "$PYTHON" -m pip install -r "$ROOT/requirements.txt" --quiet; then
@@ -128,12 +120,12 @@ menu() {
             pause
             menu
             ;;
-        5)
+        4)
             exit 0
             ;;
         *)
             echo
-            printf "%bInvalid option. Please choose 1-5.%b\n" "$C_RED" "$C_RESET"
+            printf "%bInvalid option. Please choose 1-4.%b\n" "$C_RED" "$C_RESET"
             menu
             ;;
     esac

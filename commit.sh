@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sims 4 Random Loading Screen - Git commit + tag script
+# TS4RLS - Git commit + tag script
 # Commits whatever's staged/unstaged and tags it with the version currently
 # in VERSION.md, read dynamically so this script never goes stale the way a
 # hardcoded version number does.
@@ -23,7 +23,7 @@ fi
 if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
     echo "Tag v${VERSION} already exists - skipping."
 else
-    git tag -a "v${VERSION}" -m "Sims 4 Random Loading Screen v${VERSION}"
+    git tag -a "v${VERSION}" -m "TS4RLS v${VERSION}"
     echo "Tagged v${VERSION}."
 fi
 

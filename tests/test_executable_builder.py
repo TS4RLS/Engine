@@ -105,24 +105,3 @@ def test_should_build_curseforge_interactive_blank_answer_keeps_default():
 def test_should_build_curseforge_interactive_answer_overrides_default():
     assert builder._should_build_curseforge(False, interactive=True, ask=lambda _: "y") is True
     assert builder._should_build_curseforge(True, interactive=True, ask=lambda _: "n") is False
-
-
-# ─── _choose_app_icon ────────────────────────────────────────────────────────
-
-def test_choose_app_icon_noninteractive_uses_default():
-    assert builder._choose_app_icon("dark", interactive=False) == "dark"
-    assert builder._choose_app_icon("light", interactive=False) == "light"
-
-
-def test_choose_app_icon_invalid_default_falls_back_to_dark():
-    assert builder._choose_app_icon("purple", interactive=False) == "dark"
-
-
-def test_choose_app_icon_interactive_blank_answer_keeps_default():
-    assert builder._choose_app_icon("dark", interactive=True, ask=lambda _: "") == "dark"
-    assert builder._choose_app_icon("light", interactive=True, ask=lambda _: "") == "light"
-
-
-def test_choose_app_icon_interactive_answer_overrides_default():
-    assert builder._choose_app_icon("dark", interactive=True, ask=lambda _: "light") == "light"
-    assert builder._choose_app_icon("light", interactive=True, ask=lambda _: "dark") == "dark"

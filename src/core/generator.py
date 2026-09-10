@@ -81,7 +81,7 @@ def load_config() -> dict:
     if not os.path.isfile(config_path):
         raise GeneratorError(
             "config.json not found.\n"
-            "  Run the quick setup wizard (Configure settings), or see config.example.json."
+            "  Open the GUI's Settings tab to create one, or see config.example.json."
         )
 
     try:

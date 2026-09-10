@@ -5,6 +5,34 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [3.0.0] - 2026-09-10
+
+### Changed
+- **CLI removed entirely.** The interactive text menu (`src/cli/menu.py`,
+  `--cli`) is gone — the GUI's Settings tab is now the only config editor.
+  `src/cli/info_guide.py` was removed too (it was only reachable from the
+  menu).
+- **Single entry point moved to the repo root**: `src/app.py` and
+  `src/gui.py` were merged into a root-level `gui.py`. Run `python gui.py`
+  for the GUI or `python gui.py --generate [--force-launch]` headless.
+- **Main executable renamed** from `Sims4RandomLoadingScreen` to `TS4RLS`,
+  and its OS app-data folder (where `config.json` lives when not running
+  portably) renamed to match — existing installs need to re-enter their
+  settings once, or move their old `config.json` over manually.
+- **Built executables now land in `dist/`** instead of the repo root.
+- **One unified brand icon/logo**: `assets/icon.png`/`logo.png` is now a
+  single medium-green mark used everywhere (GUI window icon, main
+  executable icon, About tab) — the `app_icon` config key and the
+  `logo_dark.png`/`logo_light.png` split are gone. `icon_dark.png`/
+  `icon_light.png` remain, but only as inputs to the Steam asset generator
+  (Steam genuinely has a light/dark theme; the app itself doesn't need one).
+
+### Removed
+- `src/cli/menu.py`, `src/cli/info_guide.py`, `src/common/theme.py`
+  (OS dark-mode detection, no longer needed without a dark/light app icon
+  choice), `assets/logo_dark.png`, `assets/logo_light.png`, the `app_icon`
+  config key.
+
 ## [2.0.4] - 2026-09-10
 
 ### Added

@@ -1,12 +1,17 @@
 """
-Desktop GUI for this project — a tkinter front end over the same
-config.json and generation logic the CLI (src/cli/menu.py) uses. Requires
-only the Python standard library (tkinter ships with Python).
+TS4RLS — single entry point and desktop GUI. This is what gets built into
+the distributed executable(s); requires only the Python standard library
+(tkinter ships with Python).
 
 Run standalone:
-    python src/gui.py
+    python gui.py                                   -> GUI
+    python gui.py --generate [--force-launch]        -> headless, one-shot
 
-Or use the packaged executable built by src/build/executable_builder.py.
+When the running executable's own filename matches the CurseForge disguise
+name (TS4_x64[.exe]), it always behaves as --generate --force-launch with
+no arguments needed, so the same build works as both the normal app and
+the CurseForge pre-launch script. Use src/build/executable_builder.py to
+build the executable(s).
 """
 
 import os
@@ -20,16 +25,17 @@ import webbrowser
 import zipfile
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from src.common import paths, theme
+from src.common import paths
 from src.cli import config_editor
 from src.cli.config_editor import SETTINGS, format_value
 from src.core.generator import GeneratorError, generate, load_config as load_generator_config
 
 REPO_URL = "https://github.com/TS4RLS/Engine"
+CURSEFORGE_NAME = "ts4_x64"
 
 FOLDER_KEYS = {"images_folder", "mods_folder"}
 FILE_KEYS = {"game_exe"}
@@ -51,10 +57,14 @@ def find_python() -> str:
     return ""
 
 
+def _is_curseforge_build() -> bool:
+    name = os.path.splitext(os.path.basename(sys.executable if getattr(sys, "frozen", False) else __file__))[0]
+    return name.lower() == CURSEFORGE_NAME
+
+
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.dark_mode = theme.detect_dark_mode()
 
         self.title(f"TS4RLS - The Sims 4 Random Loading Screen v{_get_version()}")
         self.geometry("760x600")
@@ -82,11 +92,8 @@ class App(tk.Tk):
 
         self.after(100, self._poll_log_queue)
 
-    def _icon_basename(self, ext: str) -> str:
-        return ("icon_dark" if self.dark_mode else "icon_light") + ext
-
     def _set_window_icon(self):
-        icon_path = paths.resource_path(os.path.join("assets", self._icon_basename(".png")))
+        icon_path = paths.resource_path(os.path.join("assets", "icon.png"))
         try:
             photo = tk.PhotoImage(file=icon_path)
             self.iconphoto(True, photo)
@@ -334,7 +341,7 @@ class App(tk.Tk):
         header = ttk.Frame(frame)
         header.pack(fill="x", anchor="w")
 
-        logo_path = paths.resource_path(os.path.join("assets", self._icon_basename(".png")))
+        logo_path = paths.resource_path(os.path.join("assets", "icon.png"))
         try:
             logo = tk.PhotoImage(file=logo_path)
             logo = logo.subsample(max(1, logo.width() // 64), max(1, logo.height() // 64))
@@ -402,6 +409,23 @@ class App(tk.Tk):
 
 
 def main():
+    argv = sys.argv[1:]
+    force_launch = "--force-launch" in argv or _is_curseforge_build()
+    headless = "--generate" in argv or _is_curseforge_build()
+
+    if headless:
+        from src.cli import cli_colors
+
+        try:
+            cfg = load_generator_config()
+            result = generate(cfg, force_launch=force_launch)
+        except GeneratorError as e:
+            print("\n" + cli_colors.error(str(e)))
+            sys.exit(1)
+        if result.warning:
+            print(cli_colors.warning(result.warning))
+        return
+
     App().mainloop()
 
 

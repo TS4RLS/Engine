@@ -11,7 +11,7 @@ as a frozen (PyInstaller) executable:
 import os
 import sys
 
-APP_NAME = "Sims4RandomLoadingScreen"
+APP_NAME = "TS4RLS"
 
 
 def is_frozen() -> bool:

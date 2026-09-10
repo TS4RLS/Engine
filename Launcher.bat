@@ -3,8 +3,8 @@ setlocal EnableExtensions EnableDelayedExpansion
 
 :: ─────────────────────────────────────────────────────────────────
 :: Dev launcher for running this project from source (contributors).
-:: End users should use the built Sims4RandomLoadingScreen(.exe)/TS4_x64
-:: executable instead (see src/build/executable_builder.py). Pass
+:: End users should use the built TS4RLS(.exe)/TS4_x64 executable instead
+:: (see src/build/executable_builder.py, dist/ once built). Pass
 :: --generate here to skip straight to generating a loading screen, e.g.:
 ::   Launcher.bat --generate [--force-launch]
 :: ─────────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ if errorlevel 1 (
 )
 
 if "%~1"=="--generate" (
-    python "%ROOT%\src\app.py" %*
+    python "%ROOT%\gui.py" %*
     if errorlevel 1 (
         echo.
         echo %C_RED%[ERROR] Something went wrong. See message above.%C_RESET%
@@ -97,35 +97,27 @@ echo                                  v%VERSION%
 echo                         Built ^& Maintained by StuxieDev
 echo %C_CYAN%---------------------------------------------------------------------%C_RESET%
 echo.
-echo       %C_GREEN%1)%C_RESET% Open interactive menu (generate, rename, configure, info)
-echo       %C_GREEN%2)%C_RESET% Launch the GUI
-echo       %C_GREEN%3)%C_RESET% Build launcher executable(s)
-echo       %C_GREEN%4)%C_RESET% Run test suite
-echo       %C_GREEN%5)%C_RESET% Exit
+echo       %C_GREEN%1)%C_RESET% Launch the GUI
+echo       %C_GREEN%2)%C_RESET% Build launcher executable(s)
+echo       %C_GREEN%3)%C_RESET% Run test suite
+echo       %C_GREEN%4)%C_RESET% Exit
 echo.
 set "choice="
-set /p choice="    Select an option [1-5]: "
+set /p choice="    Select an option [1-4]: "
 
 if "%choice%"=="1" (
-    python "%ROOT%\src\app.py" --cli
+    python "%ROOT%\gui.py"
     if errorlevel 1 echo %C_RED%[ERROR] Something went wrong — see message above.%C_RESET%
-    echo.
-    pause
     goto menu
 )
 if "%choice%"=="2" (
-    python "%ROOT%\src\app.py"
-    if errorlevel 1 echo %C_RED%[ERROR] Something went wrong — see message above.%C_RESET%
-    goto menu
-)
-if "%choice%"=="3" (
     python "%ROOT%\src\build\executable_builder.py"
     if errorlevel 1 echo %C_RED%[ERROR] Build failed — see message above.%C_RESET%
     echo.
     pause
     goto menu
 )
-if "%choice%"=="4" (
+if "%choice%"=="3" (
     python -c "import pytest" >nul 2>&1
     if errorlevel 1 (
         echo %C_YELLOW%pytest not found — installing...%C_RESET%
@@ -145,10 +137,10 @@ if "%choice%"=="4" (
     pause
     goto menu
 )
-if "%choice%"=="5" (
+if "%choice%"=="4" (
     exit /b 0
 )
 
 echo.
-echo %C_RED%Invalid option. Please choose 1-5.%C_RESET%
+echo %C_RED%Invalid option. Please choose 1-4.%C_RESET%
 goto menu

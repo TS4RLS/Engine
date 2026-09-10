@@ -55,8 +55,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist_out
-          for name in Sims4RandomLoadingScreen Sims4RandomLoadingScreen.exe TS4_x64 TS4_x64.exe; do
-            [ -f "$name" ] && cp "$name" dist_out/
+          for name in TS4RLS TS4RLS.exe TS4_x64 TS4_x64.exe; do
+            [ -f "dist/$name" ] && cp "dist/$name" dist_out/
           done
           ls -la dist_out
 

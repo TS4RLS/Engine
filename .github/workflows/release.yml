@@ -110,3 +110,5 @@ jobs:
         with:
           files: release_files/*
           generate_release_notes: true
+          body: |
+            > **The text-menu CLI is discontinued and unsupported** (removed in v3.0.0). TS4RLS is GUI-only now, plus `--generate` for headless/unattended use — see the [README](https://github.com/TS4RLS/Engine#readme).

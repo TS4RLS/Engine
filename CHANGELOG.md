@@ -5,6 +5,21 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.3.1] - 2026-09-10
+
+### Fixed
+- **v4.3.0's release build failed on Linux and macOS** ("Permission
+  denied" running `./build.sh`) because the new `build.sh`/`commit.sh`
+  were committed without the executable bit — git tracked them as `100644`
+  instead of `100755`. Windows silently worked anyway (no v4.3.0 GitHub
+  Release was ever published, just a tag with no build artifacts).
+
+### Added
+- Every GitHub Release now carries a standing notice that the text-menu
+  CLI is discontinued and unsupported (removed in v3.0.0) — added as a
+  static `body` alongside `generate_release_notes` in
+  `.github/workflows/release.yml`.
+
 ## [4.3.0] - 2026-09-10
 
 ### Added

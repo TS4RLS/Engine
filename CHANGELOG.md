@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.2.1] - 2026-09-10
+
+### Removed
+- `Launcher.bat`/`Launcher.sh`. They were a thin dev-menu wrapper around
+  commands (`python gui.py`, `python src/build/executable_builder.py`,
+  `pytest -v`) that are just as easy to run directly, and every dependency
+  they bootstrapped (Pillow, sv_ttk, PyInstaller) is now auto-installed by
+  `gui.py`/`executable_builder.py` themselves.
+
 ## [4.2.0] - 2026-09-10
 
 ### Added

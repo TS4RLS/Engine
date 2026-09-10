@@ -9,7 +9,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
 
-**Version 2.0.3** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 2.0.4** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -71,6 +71,7 @@ default.
 | `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
 | `target_width` / `target_height` | | `1920` / `1080` | Loading screen output size |
 | `create_curseforge_version` | | `false` | Whether `src/build/executable_builder.py` also builds the CurseForge (`TS4_x64`) executable — dev/build-time only |
+| `app_icon` | | `"dark"` | Which brand icon (`"dark"` or `"light"`) the built app executable uses — dev/build-time only |
 
 ### Vertical mode
 
@@ -80,10 +81,11 @@ When `is_vertical` is `true`, the app randomly picks **two portrait-oriented ima
 
 ## CurseForge pre-launch script
 
-A copy of the same executable, renamed to **`TS4_x64`**/`TS4_x64.exe`
-(mirroring Sims 4's own game executable), automatically generates a new
-loading screen and launches the game with no arguments needed — use it as
-your CurseForge pre-launch script. See
+A copy of the same executable, named **`TS4_x64`**/`TS4_x64.exe`
+(mirroring Sims 4's own game executable) and using a plumbob-style icon
+that mimics Sims 4's own game icon rather than the TS4RLS brand icon,
+automatically generates a new loading screen and launches the game with no
+arguments needed — use it as your CurseForge pre-launch script. See
 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for how to build it yourself.
 
 ---
@@ -156,7 +158,8 @@ These files in `assets/` are required at runtime/build time, not just artwork:
 
 - `template.package` — base mod template every generated loading screen is spliced into
 - `icon_dark.ico` / `icon_dark.icns` / `icon_dark.png` — the app's default icon and the GUI's dark-mode branding
-- `icon_light.ico` / `icon_light.icns` / `icon_light.png` — icon for the `TS4_x64` build and the GUI's light-mode branding
+- `icon_light.ico` / `icon_light.icns` / `icon_light.png` — the app's alternate icon (`app_icon: "light"`) and the GUI's light-mode branding
+- `icon_curseforge.ico` / `icon_curseforge.icns` / `icon_curseforge.png` — icon for the `TS4_x64` build, styled to mimic Sims 4's own game icon
 - `logo_dark.png` / `logo_light.png` — the wordmark logo (for dark/light-background contexts respectively)
 
 ---

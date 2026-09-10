@@ -13,12 +13,12 @@ library grid requirements.
 | `background_dark.png` / `background_light.png` | 3840×1240 | Library hero |
 | `logo_dark.png` / `logo_light.png` | 1280×720 | Library logo (transparent background) |
 
-Each slot has a **dark** version (using `assets/icon_dark.*`) and a
-**light** version (using `assets/icon_light.*`). Use whichever matches the
-shortcut you're skinning:
-
-- `_dark` set → `Sims4RandomLoadingScreen`/`.exe` shortcut
-- `_light` set → `TS4_x64`/`.exe` (CurseForge pre-launch) shortcut
+Each slot has a **dark** version and a **light** version — pick whichever
+looks better against your own Steam library theme/background; both work
+for either the `Sims4RandomLoadingScreen`/`.exe` or `TS4_x64`/`.exe`
+shortcut. (`TS4_x64`'s own executable icon is a separate, plumbob-style
+icon that mimics Sims 4's own game icon — see `assets/icon_curseforge.*` —
+unrelated to which Steam artwork set you pick here.)
 
 Don't have the source repo? The app's **About** tab has a
 **Save Steam artwork (.zip)...** button that saves this same set anywhere

@@ -5,6 +5,27 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [2.0.4] - 2026-09-10
+
+### Added
+- **`app_icon` config key** (`"dark"` or `"light"`, default `"dark"`) —
+  `src/build/executable_builder.py` now asks (or reads this default
+  non-interactively) which brand icon the main app executable is built
+  with, instead of always using the dark one.
+- **`assets/icon_curseforge.ico`/`.icns`/`.png`** — restored the original
+  green plumbob-style icon (which mimics Sims 4's own game icon) and the
+  `TS4_x64` CurseForge build now uses it instead of the TS4RLS brand icon,
+  so the disguised executable looks like the real game exe it replaces.
+
+### Changed
+- **Icon/text contrast rule, applied consistently everywhere**: anything
+  on a dark background (`*_dark` steam assets, `logo_dark.png`) now uses
+  the *light* icon and the light icon's own color for text; anything on a
+  light background (`*_light` steam assets, `logo_light.png`) uses the
+  *dark* icon and the dark icon's own color for text — previously the
+  dark/light suffix matched its own same-tone icon (low contrast) and text
+  colors were chosen ad hoc per asset.
+
 ## [2.0.3] - 2026-09-10
 
 ### Changed

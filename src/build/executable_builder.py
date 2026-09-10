@@ -148,6 +148,22 @@ def _build_exe(name: str, icon_base: str) -> str:
     return exe_path
 
 
+def _choose_app_icon(default: str, interactive: bool, ask=input) -> str:
+    """Decide which brand icon (dark or light) the main app executable is
+    built with. Same non-interactive/interactive-override pattern as
+    _should_build_curseforge — config.json's "app_icon" sets a lasting
+    default, interactive runs can override it per build.
+    """
+    default = default if default in ("dark", "light") else "dark"
+    if not interactive:
+        return default
+    other = "light" if default == "dark" else "dark"
+    answer = ask(f"\nBuild the app with the dark or light icon? [{default}/{other}]: ").strip().lower()
+    if not answer:
+        return default
+    return "light" if answer.startswith("l") else "dark"
+
+
 def _should_build_curseforge(default: bool, interactive: bool, ask=input) -> bool:
     """Decide whether to build the CurseForge (TS4_x64) executable.
 
@@ -173,14 +189,19 @@ def build():
 
     ensure_pyinstaller()
 
-    app_path = _build_exe(APP_EXE_NAME, "icon_dark")
-    print(f"\nDone!  App ready: {app_path}")
+    cfg = _load_build_config()
+
+    app_icon = _choose_app_icon(cfg.get("app_icon", "dark"), sys.stdin.isatty())
+    app_path = _build_exe(APP_EXE_NAME, f"icon_{app_icon}")
+    print(f"\nDone!  App ready ({app_icon} icon): {app_path}")
     print("Double-click for the GUI, or run with --cli / --generate [--force-launch].")
 
-    cfg = _load_build_config()
     default_cf = cfg.get("create_curseforge_version", False)
     if _should_build_curseforge(default_cf, sys.stdin.isatty()):
-        cf_path = _build_exe(CURSEFORGE_EXE_NAME, "icon_light")
+        # Uses the plumbob-style icon that mimics Sims 4's own game icon
+        # (not the TS4RLS brand icon) so the disguised executable stays
+        # visually consistent with the real TS4_x64.exe it replaces.
+        cf_path = _build_exe(CURSEFORGE_EXE_NAME, "icon_curseforge")
         print(f"\nCurseForge version ready: {cf_path}")
         print("This always launches the game — use it as your CurseForge pre-launch script.")
 

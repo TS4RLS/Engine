@@ -35,6 +35,7 @@ SETTINGS = [
     ("target_width", "int", "Loading screen output width", False, 1920),
     ("target_height", "int", "Loading screen output height", False, 1080),
     ("create_curseforge_version", "bool", "Also build the TS4_x64 CurseForge pre-launch executable", False, False),
+    ("app_icon", "str", 'Which brand icon the built app executable uses: "dark" or "light"', False, "dark"),
 ]
 
 

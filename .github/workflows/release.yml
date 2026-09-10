@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -41,7 +44,8 @@ jobs:
 
       - name: Enable the CurseForge (TS4_x64) build
         shell: bash
-        run: echo '{"create_curseforge_version": true}' > config.json
+        run: |
+          echo '{"create_curseforge_version": true}' > config.json
 
       - name: Build executables
         shell: bash

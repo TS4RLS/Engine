@@ -426,7 +426,7 @@ def generate(cfg: dict, force_launch: bool = False, log=print) -> GenerateResult
 
 def main():
     print(cli_colors.banner(
-        "Sims 4 Random Loading Screen - Package Generator",
+        "TS4RLS - The Sims 4 Random Loading Screen - Package Generator",
         f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
     ))
 

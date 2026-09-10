@@ -107,7 +107,7 @@ if __name__ == "__main__":
     from src.core.generator import GeneratorError, load_config
 
     print(cli_colors.banner(
-        "Sims 4 Random Loading Screen - Images Renamer",
+        "TS4RLS - The Sims 4 Random Loading Screen - Images Renamer",
         f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
     ))
 

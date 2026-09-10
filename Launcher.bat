@@ -24,7 +24,7 @@ set "ROOT=%ROOT:~0,-1%"
 
 set "VERSION="
 set /p VERSION=<"%ROOT%\VERSION.md"
-title Sims 4 Random Loading Screen v%VERSION%
+title TS4RLS - The Sims 4 Random Loading Screen v%VERSION%
 
 :: ── Locate Python ───────────────────────────────────────────────────
 where python >nul 2>&1
@@ -92,7 +92,7 @@ if "%~1"=="--generate" (
 :menu
 echo.
 echo %C_CYAN%---------------------------------------------------------------------%C_RESET%
-echo %C_BOLD%          Sims 4 Random Loading Screen - Dev Launcher%C_RESET%
+echo %C_BOLD%          TS4RLS - The Sims 4 Random Loading Screen - Dev Launcher%C_RESET%
 echo                                  v%VERSION%
 echo                         Built ^& Maintained by StuxieDev
 echo %C_CYAN%---------------------------------------------------------------------%C_RESET%

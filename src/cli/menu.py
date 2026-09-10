@@ -60,7 +60,7 @@ def run():
     while True:
         print()
         print(cli_colors.banner(
-            "Sims 4 Random Loading Screen - Interactive Menu",
+            "TS4RLS - The Sims 4 Random Loading Screen - Interactive Menu",
             f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
         ))
         print()

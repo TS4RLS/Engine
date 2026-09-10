@@ -14,7 +14,7 @@ if _ROOT not in sys.path:
 from src.cli import cli_colors
 from src.common import paths
 
-REPO_URL = "https://github.com/StuxieDev/Sims-4-Random-Loading-Screen"
+REPO_URL = "https://github.com/TS4RLS/Engine"
 
 
 def _get_version() -> str:
@@ -27,7 +27,7 @@ def _get_version() -> str:
 
 def run():
     print(cli_colors.banner(
-        "Sims 4 Random Loading Screen",
+        "TS4RLS - The Sims 4 Random Loading Screen",
         f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
     ))
     print()

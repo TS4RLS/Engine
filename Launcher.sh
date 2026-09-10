@@ -78,7 +78,7 @@ pause() {
 menu() {
     echo
     printf "%b---------------------------------------------------------------------%b\n" "$C_CYAN" "$C_RESET"
-    printf "%b          Sims 4 Random Loading Screen - Dev Launcher%b\n" "$C_BOLD" "$C_RESET"
+    printf "%b          TS4RLS - The Sims 4 Random Loading Screen - Dev Launcher%b\n" "$C_BOLD" "$C_RESET"
     echo "                               v$VERSION"
     echo "                     Built & Maintained by StuxieDev"
     printf "%b---------------------------------------------------------------------%b\n" "$C_CYAN" "$C_RESET"

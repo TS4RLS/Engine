@@ -1,17 +1,23 @@
 <p align="center">
-  <img src="assets/logo.png" width="500" alt="Sims 4 Random Loading Screen">
+  <img src="assets/logo.png" width="500" alt="TS4RLS — The Sims 4 Random Loading Screen">
 </p>
 
-# Sims 4 Random Loading Screen
+# TS4RLS — The Sims 4 Random Loading Screen
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
+
+**Version 2.0.1** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+
+Website: https://ts4rls.stuxie.dev  
+Repository: https://github.com/TS4RLS/Engine  
+License: [Closed-source](LICENSE.md)
 
 ---
 
 ## Download
 
 Grab the latest **`Sims4RandomLoadingScreen`** executable from the
-[Releases page](https://github.com/StuxieDev/Sims-4-Random-Loading-Screen/releases) —
+[Releases page](https://github.com/TS4RLS/Engine/releases) —
 it's a single self-contained file, nothing else to install. Double-click it
 for a GUI, or run it from a terminal with `--cli` for a text menu.
 

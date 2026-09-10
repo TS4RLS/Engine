@@ -29,7 +29,7 @@ from src.cli import config_editor
 from src.cli.config_editor import SETTINGS, format_value
 from src.core.generator import GeneratorError, generate, load_config as load_generator_config
 
-REPO_URL = "https://github.com/StuxieDev/Sims-4-Random-Loading-Screen"
+REPO_URL = "https://github.com/TS4RLS/Engine"
 
 FOLDER_KEYS = {"images_folder", "mods_folder"}
 FILE_KEYS = {"game_exe"}
@@ -56,7 +56,7 @@ class App(tk.Tk):
         super().__init__()
         self.dark_mode = theme.detect_dark_mode()
 
-        self.title(f"Sims 4 Random Loading Screen v{_get_version()}")
+        self.title(f"TS4RLS - The Sims 4 Random Loading Screen v{_get_version()}")
         self.geometry("760x600")
         self.minsize(640, 500)
         self._set_window_icon()
@@ -348,7 +348,7 @@ class App(tk.Tk):
 
         text_col = ttk.Frame(header)
         text_col.pack(side="left", anchor="w")
-        ttk.Label(text_col, text="Sims 4 Random Loading Screen", font=("", 13, "bold")).pack(anchor="w")
+        ttk.Label(text_col, text="TS4RLS — The Sims 4 Random Loading Screen", font=("", 13, "bold")).pack(anchor="w")
         ttk.Label(text_col, text=f"v{_get_version()}  ·  Built & Maintained by StuxieDev").pack(anchor="w")
 
         ttk.Label(

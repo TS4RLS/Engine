@@ -5,6 +5,23 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [2.0.1] - 2026-09-10
+
+### Changed
+- **Project moved to the `TS4RLS` GitHub org** (`github.com/TS4RLS/Engine`,
+  transferred from `StuxieDev/Sims-4-Random-Loading-Screen` — old links
+  redirect, but every in-repo reference now points at the new URL), joined
+  by new `TS4RLS/Website` (`ts4rls.stuxie.dev`) and `TS4RLS/.github` repos.
+- **Brand mark redesigned** — `assets/icon.png`/`icon.ico`/`icon.icns`,
+  `alt_icon.*`, and `assets/logo.png` are now a flat, minimal "photo dice"
+  mark (three small image pictograms in a diagonal die-face arrangement)
+  instead of the previous gradient ring/badge composition, in the same
+  purple (main) and green (`alt_icon`, light-mode/CurseForge) palettes.
+  `assets/steam/*.png` regenerated to match.
+- README header now reads "TS4RLS — The Sims 4 Random Loading Screen" and
+  adds a `Website:`/`License:` line alongside `Repository:`, matching the
+  org's other repos.
+
 ## [2.0.0] - 2026-09-10
 
 A restructuring release: the app now ships as a single self-contained

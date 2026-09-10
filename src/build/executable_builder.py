@@ -167,7 +167,7 @@ def _should_build_curseforge(default: bool, interactive: bool, ask=input) -> boo
 
 def build():
     print(cli_colors.banner(
-        "Sims 4 Random Loading Screen - Executable Builder",
+        "TS4RLS - The Sims 4 Random Loading Screen - Executable Builder",
         f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
     ))
 

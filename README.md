@@ -9,7 +9,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it before launching the game and get a fresh screen every time.
 
-**Version 2.0.2** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 2.0.3** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  

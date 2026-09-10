@@ -14,8 +14,13 @@ feature additions, PATCH marks fixes.
   fixed-width image with a large empty margin on the right.
 - `assets/steam/logo_dark.png`/`logo_light.png` (the Steam "Library logo"
   slot) was missing the "TS4RLS" shortcode entirely (subtitle only) —
-  added it back in a lighter green readable against the transparent
-  background regardless of what it's composited over.
+  added it back.
+- All four `assets/steam/*_dark.png`/`*_light.png` assets (cover, wide
+  cover, background, logo) now use the same green-tinted title/subtitle
+  colors — `cover.png`/`wide_cover.png` previously used plain
+  white/near-black text, inconsistent with the logo asset.
+- `assets/logo_dark.png`/`logo_light.png` (the top-level wordmark) now use
+  the exact same green-tint text colors as their `assets/steam/` counterparts.
 
 ## [2.0.2] - 2026-09-10
 

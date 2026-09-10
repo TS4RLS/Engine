@@ -9,7 +9,7 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 ## Getting set up
 
 1. Python 3.6+
-2. `pip install -r requirements-dev.txt` (installs `pytest` and `Pillow`;
+2. `pip install -r requirements.txt` (installs `pytest` and `Pillow`;
    `Pillow` and `PyInstaller` are also installed automatically on first
    run of the launcher/exe builder if missing)
 3. Copy `config.example.json` to `config.json` and fill in
@@ -32,16 +32,16 @@ your real `config.json`, images, Mods folder, or the game itself. CI
 request.
 
 For anything the test suite doesn't cover (the actual `.package` output
-loading correctly in-game, the `.exe` build, launch-via-Steam behavior),
+loading correctly in-game, the executable build, launch-via-Steam behavior),
 verify manually:
 
-- Run `Sims4_RLS_Creator.py` (or the launcher) against a real
+- Run `src/package_generator.py` (or `Launcher.bat`/`Launcher.sh`) against a real
   `images_folder`/`mods_folder` and confirm the loading screen changes
   in-game.
-- If you touched `Sims4_RLS_ExeBuilder.py`, rebuild the executable
-  locally (`python Sims4_RLS_ExeBuilder.py`) and confirm
-  `Sims4_RLS_Launcher.exe` still launches and produces the same result
-  as running the `.bat`/`.py` directly.
+- If you touched `src/executable_builder.py`, rebuild the executable locally
+  (`python src/executable_builder.py`) and confirm `Launcher.exe`/`Launcher`
+  still launches and produces the same result as running
+  `Launcher.bat`/`Launcher.sh`/`src/package_generator.py` directly.
 - If you touched launch behavior (`launch_game`, `launch_via_steam`,
   `game_exe`, CurseForge/`.curseclient` handling), confirm both the
   Steam and direct-exe launch paths still behave as configured.

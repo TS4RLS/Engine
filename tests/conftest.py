@@ -12,9 +12,10 @@ import shutil
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, "src")
 
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
 _config_path = os.path.join(ROOT, "config.json")
 _example_path = os.path.join(ROOT, "config.example.json")

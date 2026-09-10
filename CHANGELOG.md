@@ -5,6 +5,58 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [1.2.0] - 2026-09-10
+
+### Added
+- **`Launcher.bat` / `Launcher.sh`** — a new interactive CLI at the project
+  root (generate a loading screen, rename images, build the executable(s),
+  or run the test suite) that also displays the current version from
+  `VERSION.md`. Replaces the old single-purpose `Sims4_RLS_Launcher.bat`.
+  Pass `--generate [--force-launch]` to skip the menu and generate
+  directly — this is how `Launcher.exe`/`TS4_x64.exe` invoke it.
+- **Cross-platform builds** — `src/executable_builder.py` now also builds a
+  native `Launcher` executable on macOS/Linux (calling `Launcher.sh`), using
+  `assets/icon.icns` on macOS. PyInstaller can't cross-compile, so build on
+  each platform you want a native executable for. The `TS4_x64.exe`
+  CurseForge variant stays Windows-only and is skipped elsewhere.
+- **Console banners** — `src/package_generator.py`, `src/images_renamer.py`,
+  and `src/executable_builder.py` each print a titled banner (script name,
+  current version, "Built & Maintained by StuxieDev") on run, matching the
+  `Launcher.bat`/`Launcher.sh` CLI header style.
+- **`assets/icon.icns`, `assets/alt_icon.icns`** — macOS icon equivalents of
+  the existing `.ico` files.
+- **`assets/steam_hero.png`, `steam_logo.png`, `steam_header.png`,
+  `steam_small.png`** — the rest of the standard Steam artwork set (hero
+  banner, transparent logo overlay, header capsule, small capsule) to go
+  with `steam_cover.png`.
+
+### Changed
+- **`src/` layout** — `Sims4_RLS_Creator.py`, `Sims4_RLS_ExeBuilder.py`, and
+  `Sims4_RLS_ImagesRenamer.py` moved into `src/` and renamed to
+  `package_generator.py`, `executable_builder.py`, and `images_renamer.py`.
+- **`Sims4_RLS_Launcher.exe` renamed to `Launcher.exe`** (the CurseForge
+  variant stays `TS4_x64.exe`).
+- **`requirements-dev.txt` renamed to `requirements.txt`.**
+
+### Fixed
+- `.gitignore` now also ignores `.pytest_cache/`, and `__pycache__/` is
+  anchored with a trailing slash.
+
+## [1.1.0] - 2026-09-10
+
+### Added
+- **`assets/steam_cover.png`** — a 600×900 vertical cover image for use as
+  the Steam library capsule artwork on the non-Steam-game shortcut.
+
+### Changed
+- **`TS4_x64.exe` now uses a distinct icon** (`assets/alt_icon.ico`) from
+  `Sims4_RLS_Launcher.exe` (`assets/icon.ico`), instead of both exes
+  sharing the same icon.
+- Retired the `.DONOTRENAME_DONOTREMOVE/` folder — the build-time icons
+  and the loading-screen `.package` template it held now live in
+  `assets/` (`icon.ico`, `alt_icon.ico`, `alt_icon.png`,
+  `template.package`) alongside the rest of the project's artwork.
+
 ## [1.0.1] - 2026-09-08
 
 ### Changed

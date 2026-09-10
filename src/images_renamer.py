@@ -3,9 +3,9 @@ Renames every image in the images folder to a random 32-character alphanumeric
 filename and converts it to JPEG format.
 
 Run standalone:
-    python Sims4_RLS_ImagesRenamer.py
+    python src/images_renamer.py
 
-Or called automatically by Sims4_RLS_Creator.py when rename_files is true in config.json.
+Or called automatically by package_generator.py when rename_files is true in config.json.
 """
 
 import json
@@ -87,9 +87,20 @@ def rename_and_convert(images_folder: str) -> None:
     print(f"  Renamed {ok} file(s)" + (f", {failed} skipped." if failed else "."))
 
 
+def _root_dir() -> str:
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _get_version() -> str:
+    try:
+        with open(os.path.join(_root_dir(), "VERSION.md"), "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return "?"
+
+
 def _load_images_folder() -> str:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, "config.json")
+    config_path = os.path.join(_root_dir(), "config.json")
     if not os.path.isfile(config_path):
         print("[ERROR] config.json not found.")
         sys.exit(1)
@@ -102,6 +113,13 @@ def _load_images_folder() -> str:
 
 
 if __name__ == "__main__":
+    banner_width = 69
+    print("=" * banner_width)
+    print("Sims 4 Random Loading Screen - Images Renamer".center(banner_width))
+    print(f"v{_get_version()}".center(banner_width))
+    print("Built & Maintained by StuxieDev".center(banner_width))
+    print("=" * banner_width)
+
     folder = _load_images_folder()
     if not os.path.isdir(folder):
         print(f"[ERROR] Images folder not found: {folder}")

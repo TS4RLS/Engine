@@ -42,11 +42,11 @@ _ensure_dependencies()
 # ── CONFIGURATION ─────────────────────────────────────────────────────────────
 
 def _load_config() -> dict:
-    script_dir  = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, "config.json")
+    root_dir    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(root_dir, "config.json")
 
     if not os.path.isfile(config_path):
-        example_path = os.path.join(script_dir, "config.example.json")
+        example_path = os.path.join(root_dir, "config.example.json")
         print("[ERROR] config.json not found.")
         print("  Copy config.example.json to config.json and fill in your paths:")
         print(f'    copy "{example_path}" "{config_path}"')
@@ -89,10 +89,18 @@ RENAME_FILES        = _cfg.get("rename_files", False)
 
 # ── END CONFIGURATION ──────────────────────────────────────────────────────────
 
-_SCRIPT_DIR         = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_PACKAGE    = os.path.join(
-    _SCRIPT_DIR, ".DONOTRENAME_DONOTREMOVE", "TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package"
-)
+_ROOT_DIR           = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATE_PACKAGE    = os.path.join(_ROOT_DIR, "assets", "template.package")
+
+
+def _get_version() -> str:
+    try:
+        with open(os.path.join(_ROOT_DIR, "VERSION.md"), "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return "?"
+
+
 OUTPUT_PACKAGE_NAME = "RandomLoadingScreen.package"
 SIMS4_STEAM_APP_ID  = "1222670"
 
@@ -214,7 +222,7 @@ def get_template_image_size() -> tuple:
     """Return (width, height) of the image stored in the template package."""
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
+        print("  Ensure template.package is inside the assets folder.")
         sys.exit(1)
     gfx     = _load_template_gfx(TEMPLATE_PACKAGE)
     img_off = _find_image_block_offset(gfx)
@@ -243,7 +251,7 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
     """
     if not os.path.isfile(TEMPLATE_PACKAGE):
         print(f"\n[ERROR] Template package not found:\n  {TEMPLATE_PACKAGE}")
-        print("  Ensure TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package is inside the .DONOTRENAME_DONOTREMOVE folder.")
+        print("  Ensure template.package is inside the assets folder.")
         sys.exit(1)
 
     gfx = _load_template_gfx(TEMPLATE_PACKAGE)
@@ -323,9 +331,12 @@ def build_package(argb_bytes: bytes, width: int, height: int) -> bytes:
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    print("=" * 69)
-    print("       Sims 4 Random Loading Screen Generator - Python Script")
-    print("=" * 69)
+    banner_width = 69
+    print("=" * banner_width)
+    print("Sims 4 Random Loading Screen - Package Generator".center(banner_width))
+    print(f"v{_get_version()}".center(banner_width))
+    print("Built & Maintained by StuxieDev".center(banner_width))
+    print("=" * banner_width)
 
     if not os.path.isdir(IMAGES_FOLDER):
         print(f"\n[ERROR] Images folder not found:\n  {IMAGES_FOLDER}")
@@ -334,7 +345,7 @@ def main():
 
     if RENAME_FILES:
         print("\nRenaming images...")
-        from Sims4_RLS_ImagesRenamer import rename_and_convert
+        from images_renamer import rename_and_convert
         rename_and_convert(IMAGES_FOLDER)
 
     if not os.path.isdir(MODS_FOLDER):

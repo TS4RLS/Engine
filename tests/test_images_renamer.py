@@ -1,5 +1,5 @@
 """
-Unit tests for Sims4_RLS_ImagesRenamer.py.
+Unit tests for src/images_renamer.py.
 
 All file operations run against tmp_path fixtures; nothing touches the
 user's real images_folder or config.json.
@@ -10,7 +10,7 @@ import string
 import pytest
 from PIL import Image
 
-import Sims4_RLS_ImagesRenamer as renamer
+import images_renamer as renamer
 
 
 # ─── _random_name ──────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ def test_rename_and_convert_recurses_into_subfolders(tmp_path):
 # ─── _load_images_folder ───────────────────────────────────────────────────
 
 def _patch_script_dir(monkeypatch, tmp_path):
-    monkeypatch.setattr(renamer, "__file__", str(tmp_path / "Sims4_RLS_ImagesRenamer.py"))
+    monkeypatch.setattr(renamer, "__file__", str(tmp_path / "src" / "images_renamer.py"))
 
 
 def test_load_images_folder_missing_config_exits(tmp_path, monkeypatch):

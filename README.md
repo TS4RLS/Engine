@@ -34,8 +34,11 @@ Drop PNG, JPG, BMP, WebP, or TIFF images into your `images_folder`. Sub-folders 
 
 **3. Run before launching the game**
 
-Double-click **`Sims4_RLS_Launcher.bat`** (or `Sims4_RLS_Launcher.exe`).
-The script picks a random image, builds the mod, and optionally launches Sims 4 for you.
+Run **`Launcher.bat`** (Windows) or **`./Launcher.sh`** (macOS/Linux) and
+choose **1) Generate loading screen** from the menu — or, once built, just
+double-click **`Launcher.exe`**, which skips the menu and generates directly.
+Either way, it picks a random image, builds the mod, and optionally launches
+Sims 4 for you.
 
 ---
 
@@ -48,7 +51,7 @@ All settings live in `config.json`. Only `images_folder` and `mods_folder` are r
 | `images_folder` | ✓ | — | Folder containing your source images |
 | `mods_folder` | ✓ | — | Your Sims 4 Mods folder |
 | `is_vertical` | | `true` | When `true`, combines **2 portrait images** side-by-side into one landscape loading screen |
-| `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image. Can also be run standalone: `python Sims4_RLS_ImagesRenamer.py` |
+| `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image. Can also be run standalone via `Launcher.bat`/`Launcher.sh` (option 2) or `python src/images_renamer.py` |
 | `launch_game` | | `true` | Automatically launch Sims 4 after generating the mod |
 | `launch_via_steam` | | `true` | Launch via Steam (`steam://rungameid/...`) |
 | `game_exe` | | `""` | Direct path to `TS4_x64.exe` — only used when `launch_via_steam` is `false` |
@@ -63,15 +66,25 @@ When `is_vertical` is `true`, the script randomly picks **two portrait-oriented 
 
 ## Steam launcher (.exe)
 
-To add the tool to Steam as a non-Steam game, build a standalone executable:
+To add the tool to Steam as a non-Steam game, build a standalone executable
+via `Launcher.bat`/`Launcher.sh` (option 3) or directly:
 
 ```
-python Sims4_RLS_ExeBuilder.py
+python src/executable_builder.py
 ```
 
-This produces **`Sims4_RLS_Launcher.exe`** in the same folder. The exe just calls `Sims4_RLS_Launcher.bat` — keep both files together. PyInstaller is installed automatically if needed.
+This produces **`Launcher.exe`** (Windows) or plain **`Launcher`** (macOS/Linux)
+in the project root, using `assets/icon.ico`/`icon.icns`. It just calls
+`Launcher.bat`/`Launcher.sh` next to it in non-interactive mode — keep them
+together. PyInstaller is installed automatically if needed. PyInstaller can't
+cross-compile, so run the builder on each platform you want a native build
+for.
 
-The icon is read from `.DONOTRENAME_DONOTREMOVE/ExeIcon_DONOTRENAME_DONOTREMOVE.ico` automatically.
+On Windows, if `create_curseforge_version` is `true` in `config.json`, a
+second exe, **`TS4_x64.exe`**, is also built using `assets/alt_icon.ico`. It
+behaves identically but always launches the game, for use as a CurseForge
+pre-launch script. This variant is Windows/CurseForge-specific and is
+skipped on macOS/Linux.
 
 ---
 
@@ -96,7 +109,7 @@ The output won't conflict with other mods as long as no other loading screen `.p
 | `config.json missing required key` | Check `config.example.json` for required keys |
 | `[ERROR] Images folder not found` | Update `images_folder` in `config.json` |
 | `[ERROR] Mods folder not found` | Update `mods_folder` in `config.json` |
-| `[ERROR] Template package not found` | Ensure `.DONOTRENAME_DONOTREMOVE/TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package` is present |
+| `[ERROR] Template package not found` | Ensure `assets/template.package` is present |
 | `[ERROR] No images found` | Check the folder path and that your files are PNG/JPG/BMP/WebP/TIFF |
 | Loading screen unchanged in-game | Delete `localthumbcache.package` from your Mods folder, then relaunch |
 | Still showing blue loading screen | Remove any other loading screen `.package` from your Mods folder |
@@ -112,7 +125,7 @@ file renaming) using temporary directories — no test touches your real
 `config.json`, images, Mods folder, or the game itself.
 
 ```
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 pytest -v
 ```
 
@@ -121,12 +134,25 @@ on every push and pull request.
 
 ---
 
+## Project layout
+
+```
+Launcher.bat / Launcher.sh  Interactive CLI entry point (root)
+src/
+  package_generator.py      Generates the loading screen mod
+  images_renamer.py         Renames/converts images to JPEG
+  executable_builder.py     Builds the standalone executable(s)
+assets/                     Icons, logo, template.package, Steam artwork
+config.json                 Your personal settings (gitignored)
+```
+
 ## Do not rename or remove
 
-The `.DONOTRENAME_DONOTREMOVE/` folder must stay intact:
+These files in `assets/` are required at runtime/build time, not just artwork:
 
-- `TemplateLoadingScreen_DONOTRENAME_DONOTREMOVE.package` — base mod template used to build each package
-- `ExeIcon_DONOTRENAME_DONOTREMOVE.ico` — icon embedded into the `.exe` at build time
+- `template.package` — base mod template every generated loading screen is spliced into
+- `icon.ico` / `icon.icns` — icon embedded into `Launcher.exe`/`Launcher` at build time
+- `alt_icon.ico` — icon embedded into `TS4_x64.exe` at build time
 
 ---
 

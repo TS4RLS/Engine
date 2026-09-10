@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.1.4] - 2026-09-10
+
+### Fixed
+- `assets/logo.png` subtitle text is now bold (matching the title's
+  weight, just at a smaller size) instead of regular weight, which still
+  read as too faint — the color was already correct (same medium green
+  as the icon face) from 4.1.2.
+
 ## [4.1.3] - 2026-09-10
 
 ### Fixed

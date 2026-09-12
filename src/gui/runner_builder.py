@@ -8,7 +8,7 @@ Only used by the GUI itself -- main_window.py's Build tab runs this as a
 subprocess (via the same system Python find_python() already locates for
 the test-suite action), not something a developer invokes directly or CI
 ever runs. It works from a shipped exe too, unlike
-src/scripts/build_release_files.py, since it only needs a system Python
+src/build/create_release_files.py, since it only needs a system Python
 capable of running PyInstaller, not the app's own bundled runtime.
 
 Run with: python -m src.gui.runner_builder [--name=NAME]

@@ -1,6 +1,6 @@
 """
 config.json read/write helpers, shared by gui.py (Build tab) and
-src/scripts/build_release_files.py. Not a CLI tool itself — the interactive
+src/build/create_release_files.py. Not a CLI tool itself — the interactive
 config wizard was removed along with the rest of the text-menu CLI; the
 GUI's Build tab is the only editor now.
 """

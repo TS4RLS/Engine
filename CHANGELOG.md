@@ -5,6 +5,19 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.1.3] - 2026-09-12
+
+### Changed
+- Merged `src/scripts/` into `src/build/` and renamed all three dev/CI
+  scripts: `build_release_files.py` → `create_release_files.py`,
+  `generate_icon.py` → `create_project_assets.py`, `steam_asset_builder.py`
+  → `create_steam_assets.py` — matching the sibling TWRAR project's layout
+  and naming.
+- `create_project_assets.py` now also writes the sibling Website repo's
+  `icon.png`/`logo.png` directly (previously only `favicon.ico`) — reuses
+  the 1024x1024 hi-res render already generated for `icon.icns` so the
+  website's icon isn't downgraded to the app's smaller 256x256 one.
+
 ## [5.1.2] - 2026-09-12
 
 ### Fixed

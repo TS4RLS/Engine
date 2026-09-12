@@ -1,7 +1,8 @@
 """One-off generator for assets/icon.png, assets/icon.ico, assets/icon.icns,
-assets/logo.png.
+assets/logo.png, and the sibling Website repo's matching icon.png,
+logo.png, and favicon.ico.
 
-Run with: python src/scripts/generate_icon.py
+Run with: python src/build/create_project_assets.py
 Requires Pillow (dev-only; not a runtime dependency of the app itself).
 
 Reproduces the existing hand-made icon/logo in code: three "photo frame"
@@ -16,6 +17,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 ASSETS = Path(__file__).resolve().parent.parent.parent / "assets"
 ASSETS.mkdir(exist_ok=True)
+
+# Sibling Website repo's assets/ - gets its own copy of icon.png/logo.png
+# (so the site never drifts out of sync with the app's branding) plus
+# favicon.ico, which is a Website-only asset that has no business living
+# in this repo.
+WEBSITE_ASSETS = Path(__file__).resolve().parent.parent.parent.parent / "Website" / "assets"
 
 BG = (46, 125, 50, 255)      # green 800 - background, and the wordmark text
 DARK = (27, 94, 32, 255)     # green 900 - diamond frames and the tree
@@ -129,6 +136,24 @@ def main() -> None:
         f"Wrote {ASSETS / 'logo.png'}, {ASSETS / 'icon.png'}, "
         f"{ASSETS / 'icon.ico'}, {ASSETS / 'icon.icns'}"
     )
+
+    # The website gets its own copies of icon.png/logo.png (kept in sync
+    # with the app's own branding) plus favicon.ico, which isn't used by
+    # the Engine app itself - it's only for the Website repo's
+    # <link rel="shortcut icon">. icon_hires (not icon_base) is used for
+    # the website's icon.png since it's already published there at
+    # 1024x1024 - reusing icon_base would silently downgrade it to 256x256.
+    if WEBSITE_ASSETS.is_dir():
+        favicon_sizes = [16, 32, 48]
+        icon_base.save(WEBSITE_ASSETS / "favicon.ico", sizes=[(s, s) for s in favicon_sizes])
+        icon_hires.save(WEBSITE_ASSETS / "icon.png")
+        logo.save(WEBSITE_ASSETS / "logo.png")
+        print(
+            f"Wrote {WEBSITE_ASSETS / 'favicon.ico'}, "
+            f"{WEBSITE_ASSETS / 'icon.png'}, {WEBSITE_ASSETS / 'logo.png'}"
+        )
+    else:
+        print(f"Skipped Website assets - no sibling checkout at {WEBSITE_ASSETS}")
 
 
 if __name__ == "__main__":

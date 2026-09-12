@@ -1,5 +1,5 @@
 """
-Unit tests for src/scripts/build_release_files.py.
+Unit tests for src/build/create_release_files.py.
 
 Only the pure, platform-dependent helper logic is tested here. Actually
 invoking ensure_dependencies()/build_gui() would shell out to pip/
@@ -8,7 +8,7 @@ build concern, not unit-testable logic, so it is intentionally left
 uncovered (see report). build_steam_zip() is covered directly since it's
 pure Python with no subprocess/PyInstaller involved.
 """
-from src.scripts import build_release_files as builder
+from src.build import create_release_files as builder
 
 
 def _patch_repo_root(monkeypatch, tmp_path):

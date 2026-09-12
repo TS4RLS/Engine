@@ -44,7 +44,7 @@ jobs:
 
       - name: Build executable
         shell: bash
-        run: python src/scripts/build_release_files.py
+        run: python src/build/create_release_files.py
 
       - name: Collect build artifacts
         shell: bash
@@ -73,7 +73,7 @@ jobs:
           python-version: "3.x"
 
       - name: Build TS4RLS_Steam_Assets.zip
-        run: python src/scripts/build_release_files.py --steam-zip
+        run: python src/build/create_release_files.py --steam-zip
 
       - name: Publish to steam_assets branch
         run: |

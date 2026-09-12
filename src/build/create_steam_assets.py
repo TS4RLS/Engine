@@ -4,7 +4,7 @@ from the current assets/icon.png and assets/logo.png, so the Steam art never
 drifts out of sync with the app's own branding again.
 
 Run this whenever icon.png or logo.png change:
-    python src/build/steam_asset_builder.py
+    python src/build/create_steam_assets.py
 
 Output (see ts4rls.stuxie.dev/steam for the asset list and how to apply it):
     assets/steam/cover.png            600x900   portrait grid capsule

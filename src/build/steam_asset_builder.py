@@ -12,6 +12,7 @@ Output (see ts4rls.stuxie.dev/steam for the asset list and how to apply it):
     assets/steam/background.png      3840x1240  library hero
     assets/steam/logo.png            1280x720   library logo, stacked (transparent bg)
     assets/steam/logo_horizontal.png 1280x720   library logo, icon+wordmark side by side (transparent bg)
+    assets/steam/icon.png             256x256   library icon (transparent bg)
 """
 
 import math
@@ -213,6 +214,13 @@ def build_logo(icon: Image.Image, title, subtitle) -> Image.Image:
     return canvas
 
 
+def build_icon(icon: Image.Image) -> Image.Image:
+    """Steam's separate "Icon" custom-artwork slot (shown in the taskbar/
+    shortcut, not the library grid) -- just the app's own icon.png as-is,
+    since it's already a square, transparent mark at a sensible size."""
+    return icon
+
+
 def build_logo_horizontal(icon: Image.Image, wordmark: Image.Image) -> Image.Image:
     """Alternate variant: icon on the left, wordmark to its right (same
     lockup as wide_cover.png), for anyone who'd rather have a wide logo
@@ -249,6 +257,7 @@ def build():
         "background.png": build_background(icon),
         "logo.png": build_logo(icon, title, subtitle),
         "logo_horizontal.png": build_logo_horizontal(icon, wordmark),
+        "icon.png": build_icon(icon),
     }
     for name, image in outputs.items():
         dest = os.path.join(STEAM_DIR, name)

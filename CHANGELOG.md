@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.1.0] - 2026-09-12
+
+### Added
+- **`assets/steam/icon.png`** (256x256, transparent) — the app's own icon,
+  for Steam's separate "Icon" custom-artwork slot (the non-Steam-game
+  shortcut icon, not the library grid art). Included in
+  `TS4RLS_Steam_Assets.zip` and the About tab's Steam artwork export like
+  every other file in `assets/steam/`.
+
 ## [5.0.1] - 2026-09-12
 
 ### Fixed

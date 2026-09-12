@@ -32,9 +32,12 @@ LIGHT = (139, 195, 74, 255)  # light green 500 - the dot in each frame
 FONT_BOLD = r"C:\Windows\Fonts\arialbd.ttf"
 
 TILE_COUNT = 3
-TILE_SIZE_FRAC = 0.339      # each diamond tile's square bounding box, of `size`
-TILE_START_FRAC = 0.069     # first tile's top-left corner, of `size`
-TILE_STEP_FRAC = 0.260      # diagonal offset between tiles, of `size`
+TILE_SIZE_FRAC = 0.2763     # each diamond tile's square bounding box, of `size`
+TILE_START_FRAC = 0.15      # first tile's top-left corner, of `size` - matches
+                            # the ~15% margin left on the other side (see
+                            # TILE_STEP_FRAC below), for an even gap all
+                            # around the whole diagonal pattern.
+TILE_STEP_FRAC = 0.2119     # diagonal offset between tiles, of `size`
 INNER_DIAMOND_RATIO = 0.7233  # inner (white) diamond's half-diagonal / outer's
 TREE_APEX_FRAC = 0.441      # of tile size, from the tile's top edge
 TREE_BASE_FRAC = 0.740
@@ -85,37 +88,44 @@ def draw_glyph(size: int) -> Image.Image:
 
 
 def draw_wordmark() -> Image.Image:
-    width, height = 1102, 300
+    height = 300
+    icon_x, icon_size = 19, 236
+    icon_y = (height - icon_size) // 2
+    text_x = icon_x + icon_size + 30
+    text_tagline_gap = 14
+
+    acronym_font = ImageFont.truetype(FONT_BOLD, 140)
+    tagline_font = ImageFont.truetype(FONT_BOLD, 34)
+    acronym = "TS4RLS"
+    tagline = "The Sims 4 Random Loading Screen"
+
+    # Measure both lines first (on a throwaway image - textbbox doesn't
+    # need a real canvas) so the whole text block can be vertically
+    # centered against the icon's own center, and the canvas sized to fit
+    # the actual content instead of a hardcoded, wider-than-necessary
+    # width that left a dead gap on the right.
+    measure_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    acronym_bbox = measure_draw.textbbox((0, 0), acronym, font=acronym_font)
+    tagline_bbox = measure_draw.textbbox((0, 0), tagline, font=tagline_font)
+    acronym_h = acronym_bbox[3] - acronym_bbox[1]
+    tagline_h = tagline_bbox[3] - tagline_bbox[1]
+    text_block_h = acronym_h + text_tagline_gap + tagline_h
+    text_block_top = (height - text_block_h) // 2  # same vertical center as the icon
+
+    acronym_w = acronym_bbox[2] - acronym_bbox[0]
+    tagline_w = tagline_bbox[2] - tagline_bbox[0]
+    right_margin = icon_x  # mirror the left margin, for a symmetric-looking gap
+    width = text_x + max(acronym_w, tagline_w) + right_margin
+
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    icon_size = 236
     icon = draw_glyph(icon_size)
-    icon_y = (height - icon_size) // 2
-    img.paste(icon, (19, icon_y), icon)
+    img.paste(icon, (icon_x, icon_y), icon)
 
-    text_x = 19 + icon_size + 30
-
-    acronym_font = ImageFont.truetype(FONT_BOLD, 140)
-    acronym = "TS4RLS"
-    acronym_bbox = draw.textbbox((0, 0), acronym, font=acronym_font)
-    acronym_top = icon_y - 6
-    draw.text(
-        (text_x, acronym_top - acronym_bbox[1]),
-        acronym,
-        font=acronym_font,
-        fill=BG,
-    )
-
-    tagline_font = ImageFont.truetype(FONT_BOLD, 34)
-    tagline = "The Sims 4 Random Loading Screen"
-    tagline_top = acronym_top + (acronym_bbox[3] - acronym_bbox[1]) + 14
-    draw.text(
-        (text_x, tagline_top),
-        tagline,
-        font=tagline_font,
-        fill=BG,
-    )
+    draw.text((text_x, text_block_top - acronym_bbox[1]), acronym, font=acronym_font, fill=BG)
+    tagline_top = text_block_top + acronym_h + text_tagline_gap
+    draw.text((text_x, tagline_top - tagline_bbox[1]), tagline, font=tagline_font, fill=BG)
 
     return img
 

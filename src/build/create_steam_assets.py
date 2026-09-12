@@ -43,6 +43,24 @@ def _load_icon() -> Image.Image:
     return Image.open(ICON_PATH).convert("RGBA")
 
 
+def _find_text_start_x(logo: Image.Image) -> int:
+    """Finds where the wordmark text begins: the first column after the
+    icon's own opaque run that has a fully-transparent gap column before
+    it. Derived from the alpha channel rather than a hardcoded x, so this
+    keeps working if the icon's on-canvas size/position ever changes."""
+    alpha = logo.split()[-1]
+    has_content = [bool(alpha.crop((x, 0, x + 1, alpha.height)).getbbox()) for x in range(alpha.width)]
+
+    x = 0
+    while x < len(has_content) and not has_content[x]:  # skip leading margin
+        x += 1
+    while x < len(has_content) and has_content[x]:  # skip the icon itself
+        x += 1
+    while x < len(has_content) and not has_content[x]:  # skip the gap
+        x += 1
+    return x
+
+
 def _load_wordmark() -> Image.Image:
     """Crops the "TS4RLS / The Sims 4 Random Loading Screen" wordmark out
     of logo.png (which is icon + wordmark side by side), so every Steam
@@ -52,10 +70,25 @@ def _load_wordmark() -> Image.Image:
     horizontal lockup (icon left, this block right), but NOT for stacking
     under a centered icon -- use _load_wordmark_parts() for that instead."""
     logo = Image.open(LOGO_PATH).convert("RGBA")
-    # The icon square ends and the wordmark begins after the first fully
-    # transparent gap column, well clear of the icon's rounded corners.
-    text = logo.crop((300, 0, logo.width, logo.height))
+    text = logo.crop((_find_text_start_x(logo), 0, logo.width, logo.height))
     return text.crop(text.getbbox())
+
+
+def _find_row_gap(img: Image.Image) -> tuple[int, int]:
+    """Finds the fully-transparent row band between the acronym and the
+    tagline in a tight wordmark crop, derived from the alpha channel
+    rather than hardcoded row numbers -- those previously went stale
+    (clipping the acronym's bottom) once its font metrics changed."""
+    alpha = img.split()[-1]
+    has_content = [bool(alpha.crop((0, y, alpha.width, y + 1)).getbbox()) for y in range(alpha.height)]
+
+    y = 0
+    while y < len(has_content) and has_content[y]:  # the acronym
+        y += 1
+    title_bottom = y
+    while y < len(has_content) and not has_content[y]:  # the gap
+        y += 1
+    return title_bottom, y
 
 
 def _load_wordmark_parts():
@@ -66,9 +99,9 @@ def _load_wordmark_parts():
     as one piece leaves the title looking off-center."""
     tight = _load_wordmark()
     w, h = tight.size
-    # Row gap between the title and subtitle baselines in the tight crop.
-    title = tight.crop((0, 0, w, 92))
-    subtitle = tight.crop((0, 125, w, h))
+    title_bottom, subtitle_top = _find_row_gap(tight)
+    title = tight.crop((0, 0, w, title_bottom))
+    subtitle = tight.crop((0, subtitle_top, w, h))
     return title.crop(title.getbbox()), subtitle.crop(subtitle.getbbox())
 
 

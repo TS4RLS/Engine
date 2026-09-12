@@ -5,6 +5,28 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.1.4] - 2026-09-12
+
+### Fixed
+- **`logo.png`'s wordmark text sat noticeably higher than the icon, and
+  the canvas had a large dead gap on the right** (`src/build/create_project_assets.py`'s
+  `draw_wordmark()`) — the acronym+tagline block is now measured up front
+  and vertically centered against the icon's own center, and the canvas
+  width is sized to fit the actual rendered content plus a small
+  symmetric margin, instead of a hardcoded, wider-than-necessary value.
+- **`icon.png`'s diagonal tile pattern was too large/off-center**, sitting
+  much closer to two of the icon's four corners than the other two
+  (`draw_glyph()`'s tile placement constants) — shrunk and re-centered so
+  the pattern's bounding box has the same margin on all four sides.
+- **`src/build/create_steam_assets.py` clipped/overlapped the wordmark**
+  when regenerating `assets/steam/*` from the fixed `logo.png` above —
+  it cropped the wordmark out of the logo at a hardcoded x/y split tuned
+  for the old layout, which cut a few pixels off the left of the tagline
+  and clipped the bottom of the acronym in the stacked variant
+  (`assets/steam/logo.png`), making it crowd into the tagline. Both
+  splits are now found dynamically from the image's own alpha channel,
+  so they stay correct regardless of the wordmark's exact layout.
+
 ## [5.1.3] - 2026-09-12
 
 ### Changed

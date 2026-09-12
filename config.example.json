@@ -12,5 +12,9 @@
     // Loading screen output width
     "target_width": 1920,
     // Loading screen output height
-    "target_height": 1080
+    "target_height": 1080,
+    // Launch The Sims 4 via Steam (steam://) instead of a direct .exe
+    "launch_via_steam": true,
+    // Sims 4 game install folder (only used when not launching via Steam)
+    "game_folder": ""
 }

@@ -40,9 +40,15 @@ AUTHOR_NAME = "StuxieDev"
 AUTHOR_URL = "https://stuxie.dev"
 STUXIEDEV_PROJECTS_URL = "https://projects.stuxie.dev"
 
+# The Sims 4's own Steam App ID -- stable, public, same for everyone who
+# owns it on Steam (unlike an install path, which varies per machine).
+SIMS4_STEAM_APP_ID = "1222670"
+SIMS4_STEAM_LAUNCH_URI = f"steam://rungameid/{SIMS4_STEAM_APP_ID}"
+
 CHANGELOG_PATH = paths.resource_path("CHANGELOG.md")
 
-FOLDER_KEYS = {"images_folder", "mods_folder"}
+FOLDER_KEYS = {"images_folder", "mods_folder", "game_folder"}
+SIMS4_EXE_CANDIDATES = ("TS4_x64.exe", "TS4.exe")
 
 DEFAULT_THEME = "dark"
 
@@ -103,7 +109,7 @@ class App(tk.Tk):
         # flashes on screen before it.
         self.withdraw()
 
-        self.title(f"TS4RLS - The Sims 4 Random Loading Screen v{_get_version()}")
+        self.title(f"TS4RLS (The Sims 4 Random Loading Screen) — v{_get_version()}")
         self.geometry("780x640")
         self.minsize(660, 540)
         self._set_window_icon()
@@ -121,11 +127,6 @@ class App(tk.Tk):
 
         self.theme = DEFAULT_THEME
         self._apply_theme()
-
-        top_bar = ttk.Frame(self)
-        top_bar.pack(fill="x", padx=8, pady=(8, 0))
-        self.theme_toggle_btn = ttk.Button(top_bar, text=self._theme_toggle_label(), command=self._on_toggle_theme)
-        self.theme_toggle_btn.pack(side="right")
 
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True, padx=8, pady=8)
@@ -150,6 +151,18 @@ class App(tk.Tk):
         self.deiconify()
 
     def _set_window_icon(self):
+        # iconphoto() alone covers Linux/macOS, but on Windows it doesn't
+        # reliably replace the taskbar/Alt-Tab icon -- only iconbitmap()
+        # with a real .ico does that there. Order matters: iconbitmap()
+        # must be called before iconphoto(), not after -- calling it
+        # afterwards resets Windows' cached taskbar icon back to the
+        # interpreter's own icon (confirmed by direct A/B testing).
+        if sys.platform == "win32":
+            icon_ico_path = paths.resource_path(os.path.join("assets", "icon.ico"))
+            try:
+                self.iconbitmap(default=icon_ico_path)
+            except Exception:
+                pass
         icon_path = paths.resource_path(os.path.join("assets", "icon.png"))
         try:
             photo = tk.PhotoImage(file=icon_path)
@@ -184,24 +197,34 @@ class App(tk.Tk):
                 ".": {"configure": {"background": c["bg"], "foreground": c["text"], "font": ("", 9)}},
                 "TFrame": {"configure": {"background": c["bg"]}},
                 "TLabel": {"configure": {"background": c["bg"], "foreground": c["text"]}},
-                "Hint.TLabel": {"configure": {"background": c["bg"], "foreground": c["text_dim"]}},
-                "Error.TLabel": {"configure": {"background": c["bg"], "foreground": c["error"]}},
-                "Link.TLabel": {"configure": {"background": c["bg"], "foreground": c["accent"]}},
                 "TLabelframe": {"configure": {
                     "background": c["bg"], "bordercolor": c["border"], "relief": "solid", "borderwidth": 1,
                 }},
                 "TLabelframe.Label": {"configure": {
                     "background": c["bg"], "foreground": c["text"], "font": ("", 9, "bold"),
                 }},
-                "TNotebook": {"configure": {"background": c["bg"], "bordercolor": c["border"]}},
+                # clam's Notebook client-area border is drawn as a 3D bevel
+                # using "lightcolor"/"darkcolor", which default to a fixed
+                # system gray regardless of "bordercolor" -- left unset,
+                # that shows up as a pale vertical line down the notebook's
+                # right/bottom edge in dark mode. Pin both to the theme's
+                # own border color so it renders as one flat, correctly
+                # dark line instead.
+                "TNotebook": {"configure": {
+                    "background": c["bg"], "bordercolor": c["border"],
+                    "lightcolor": c["border"], "darkcolor": c["border"],
+                }},
                 "TNotebook.Tab": {
                     "configure": {
                         "background": c["bg_alt"], "foreground": c["text_dim"],
                         "padding": (16, 8), "bordercolor": c["border"],
+                        "lightcolor": c["border"], "darkcolor": c["border"],
                     },
                     "map": {
                         "background": [("selected", c["bg"])],
                         "foreground": [("selected", c["text"])],
+                        "lightcolor": [("selected", c["bg"])],
+                        "darkcolor": [("selected", c["bg"])],
                     },
                 },
                 "TButton": {
@@ -215,23 +238,54 @@ class App(tk.Tk):
                         "foreground": [("disabled", c["muted"])],
                     },
                 },
+                # Same clam-bevel issue as TNotebook above: TEntry/TCheckbutton/
+                # the scrollbar all draw a sunken/raised 3D edge using
+                # "lightcolor"/"darkcolor" (and the checkbutton indicator's
+                # own upper/lower border options), which default to a fixed
+                # system gray unless pinned to the theme's border color too.
                 "TEntry": {
                     "configure": {
                         "fieldbackground": c["panel"], "foreground": c["text"],
                         "bordercolor": c["border"], "insertcolor": c["text"],
+                        "lightcolor": c["border"], "darkcolor": c["border"],
                     },
                     "map": {"bordercolor": [("focus", c["accent"])]},
                 },
                 "TCheckbutton": {
-                    "configure": {"background": c["bg"], "foreground": c["text"]},
-                    "map": {"background": [("active", c["bg"])]},
+                    "configure": {
+                        "background": c["bg"], "foreground": c["text"],
+                        "indicatorbackground": c["panel"], "indicatorforeground": c["accent"],
+                        "upperbordercolor": c["border"], "lowerbordercolor": c["border"],
+                    },
+                    "map": {
+                        "background": [("active", c["bg"])],
+                        "indicatorbackground": [("selected", c["panel"])],
+                    },
                 },
                 "Vertical.TScrollbar": {"configure": {
                     "background": c["bg_alt"], "troughcolor": c["bg"],
                     "bordercolor": c["border"], "arrowcolor": c["text_dim"],
+                    "lightcolor": c["bg_alt"], "darkcolor": c["bg_alt"],
+                }},
+                "Horizontal.TScrollbar": {"configure": {
+                    "background": c["bg_alt"], "troughcolor": c["bg"],
+                    "bordercolor": c["border"], "arrowcolor": c["text_dim"],
+                    "lightcolor": c["bg_alt"], "darkcolor": c["bg_alt"],
                 }},
             })
         style.theme_use(theme_name)
+        # Named label variants (Hint/Error/Link) are configured here, as
+        # plain runtime .configure() calls against the now-active theme,
+        # rather than inside theme_create()'s settings dict -- ttk doesn't
+        # reliably resolve a compound style name's own foreground override
+        # (falling back to the base "TLabel"/"." color instead) when it's
+        # only ever defined as part of theme_create(), even though
+        # style.lookup() reports the configured value correctly either
+        # way. Configuring it post-hoc, same as TIGHC's gui.py does for
+        # its own Header.TLabel/Hint.TLabel, renders correctly.
+        style.configure("Hint.TLabel", background=c["bg"], foreground=c["text_dim"])
+        style.configure("Error.TLabel", background=c["bg"], foreground=c["error"])
+        style.configure("Link.TLabel", background=c["bg"], foreground=c["accent"])
         self.configure(bg=c["bg"])
 
     def _theme_toggle_label(self) -> str:
@@ -251,12 +305,31 @@ class App(tk.Tk):
         c = self._tokens()
         return {"bg": c["panel"], "fg": c["text"], "insertbackground": c["text"]}
 
+    @staticmethod
+    def _use_ttk_scrollbar(scrolled_text):
+        """scrolledtext.ScrolledText's built-in vbar is a plain (non-ttk)
+        Scrollbar -- on Windows, Tk delegates its rendering to the native
+        Visual Styles engine, so configuring its bg/troughcolor has no
+        visible effect and it always renders as a stark white native
+        scrollbar against the dark theme. Swapping it for a themed
+        ttk.Scrollbar (which already follows Vertical.TScrollbar via
+        _apply_theme(), same as the About tab's own scroll area) fixes
+        this permanently -- call once right after creating the widget."""
+        old_vbar = scrolled_text.vbar
+        parent = old_vbar.master
+        old_vbar.destroy()
+        new_vbar = ttk.Scrollbar(parent, orient="vertical", command=scrolled_text.yview)
+        new_vbar.pack(side="right", fill="y")
+        scrolled_text.configure(yscrollcommand=new_vbar.set)
+        scrolled_text.vbar = new_vbar
+
     def _restyle_text_widgets(self):
         """Re-theme the classic Tk widgets ttk styling can't reach: the
         scrollable About-tab canvas, the always-dark terminal-style action
         logs, and the changelog viewer (which follows the app theme).
         Called once after all tabs are built, and again on every theme
-        toggle. Link/Hint/Error labels and every ttk widget re-theme
+        toggle. Link/Hint/Error labels, every ttk widget, and the
+        ScrolledText scrollbars (now ttk, see _use_ttk_scrollbar) re-theme
         automatically via _apply_theme()'s style switch -- no manual loop
         needed for those."""
         c = self._tokens()
@@ -285,7 +358,12 @@ class App(tk.Tk):
         dialog = tk.Toplevel(self)
         dialog.configure(bg=self._tokens()["bg"])
         dialog.title(DISCLAIMER_TITLE)
-        dialog.transient(self)
+        # No .transient(self) here: on Windows, a Toplevel made transient
+        # for a still-withdrawn owner never actually gets mapped at all
+        # (confirmed by direct testing) -- the dialog silently never
+        # appears, wait_window() blocks forever, and the app looks hung
+        # with no window at all. grab_set() below already makes this
+        # modal without needing transient().
         dialog.resizable(False, False)
         dialog.protocol("WM_DELETE_WINDOW", lambda: self._exit_from_disclaimer(dialog))
 
@@ -343,6 +421,11 @@ class App(tk.Tk):
         frame = ttk.Frame(self.home_tab)
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
+        top_row = ttk.Frame(frame)
+        top_row.pack(fill="x", pady=(0, 8))
+        self.theme_toggle_btn = ttk.Button(top_row, text=self._theme_toggle_label(), command=self._on_toggle_theme)
+        self.theme_toggle_btn.pack(side="right")
+
         settings_box = ttk.LabelFrame(frame, text="Current settings")
         settings_box.pack(fill="x")
 
@@ -393,6 +476,7 @@ class App(tk.Tk):
         self.generate_button = self.buttons["home"][-1]
         add_button("Rename images only", self._run_rename)
         add_button("Build executable", self._run_build_from_home)
+        add_button("Launch The Sims 4", self._launch_game)
 
         latest_build_box = ttk.LabelFrame(frame, text="Latest build")
         latest_build_box.pack(fill="x", pady=(0, 8))
@@ -408,8 +492,9 @@ class App(tk.Tk):
         self.status_vars["home"] = tk.StringVar(value="Ready.")
         ttk.Label(frame, textvariable=self.status_vars["home"]).pack(anchor="w")
 
-        self.logs["home"] = scrolledtext.ScrolledText(frame, state="disabled", height=14)
+        self.logs["home"] = scrolledtext.ScrolledText(frame, state="disabled", height=14, highlightthickness=0)
         self.logs["home"].pack(fill="both", expand=True, pady=(4, 0))
+        self._use_ttk_scrollbar(self.logs["home"])
 
         self._refresh_home_display()
 
@@ -552,8 +637,9 @@ class App(tk.Tk):
         self.status_vars["build"] = tk.StringVar(value="Ready.")
         ttk.Label(container, textvariable=self.status_vars["build"]).pack(anchor="w")
 
-        self.logs["build"] = scrolledtext.ScrolledText(container, state="disabled", height=10)
+        self.logs["build"] = scrolledtext.ScrolledText(container, state="disabled", height=10, highlightthickness=0)
         self.logs["build"].pack(fill="both", expand=True, pady=(4, 0))
+        self._use_ttk_scrollbar(self.logs["build"])
 
         if paths.is_frozen():
             # A shipped exe has no bundled PyInstaller/pytest to build or
@@ -677,6 +763,52 @@ class App(tk.Tk):
             self._queue_log("home", f"[ERROR] {e}")
             self.log_queue.put(("home", "done", 1))
 
+    def _launch_game(self):
+        # Both paths just hand off and return immediately (webbrowser.open
+        # for the steam:// URI, Popen for a direct exe) -- no worker
+        # thread needed, unlike generate/rename/build which actually do
+        # work in-process or via subprocess and wait on it.
+        self._append_log("home", "\n$ Launch The Sims 4\n")
+        cfg = load_generator_config()
+        via_steam = cfg.get("launch_via_steam", True)
+
+        if via_steam:
+            try:
+                if not webbrowser.open(SIMS4_STEAM_LAUNCH_URI):
+                    raise OSError("no handler for steam:// URIs")
+                self._append_log("home", "Launch request sent to Steam.")
+            except Exception as e:
+                self._append_log("home", f"[ERROR] Couldn't launch via Steam: {e}")
+                messagebox.showerror(
+                    "Couldn't launch",
+                    "Couldn't hand off to Steam. Make sure Steam is installed "
+                    "and you own The Sims 4 on it, or uncheck \"Launch via "
+                    "Steam\" in the Build tab and set a game folder instead.",
+                )
+            return
+
+        game_folder = cfg.get("game_folder") or ""
+        exe_path = next(
+            (os.path.join(game_folder, name) for name in SIMS4_EXE_CANDIDATES
+             if os.path.isfile(os.path.join(game_folder, name))),
+            None,
+        )
+        if not exe_path:
+            self._append_log("home", f"[ERROR] No Sims 4 executable found in: {game_folder or '(not set)'}")
+            messagebox.showerror(
+                "Couldn't launch",
+                "No Sims 4 executable (TS4_x64.exe/TS4.exe) found in the "
+                "configured game folder. Set it in the Build tab to the "
+                "folder that directly contains the game's .exe.",
+            )
+            return
+        try:
+            subprocess.Popen([exe_path], cwd=game_folder)
+            self._append_log("home", f"Launched: {exe_path}")
+        except OSError as e:
+            self._append_log("home", f"[ERROR] Couldn't launch {exe_path}: {e}")
+            messagebox.showerror("Couldn't launch", f"Couldn't launch {exe_path}: {e}")
+
     # Dev-only actions (subprocess: need PyInstaller/pytest from source).
 
     def _run_build_executables(self):
@@ -767,25 +899,26 @@ class App(tk.Tk):
         outer = ttk.Frame(self.about_tab)
         outer.pack(fill="both", expand=True, padx=8, pady=8)
 
-        header = ttk.Frame(outer)
-        header.pack(fill="x", anchor="w", padx=8, pady=(4, 8))
-
-        logo_path = paths.resource_path(os.path.join("assets", "icon.png"))
+        # Full logo banner instead of a small icon + text header --
+        # assets/logo.png is transparent, so the ttk.Label paints its own
+        # themed background behind it and displays correctly regardless of
+        # the active light/dark theme, matching TIGHC's About tab.
+        logo_path = paths.resource_path(os.path.join("assets", "logo.png"))
         try:
             logo = tk.PhotoImage(file=logo_path)
-            logo = logo.subsample(max(1, logo.width() // 64), max(1, logo.height() // 64))
-            logo_label = ttk.Label(header, image=logo)
+            factor = max(1, logo.height() // 64)
+            logo = logo.subsample(factor, factor)
+            logo_label = ttk.Label(outer, image=logo)
             logo_label.image = logo  # keep a reference alive
-            logo_label.pack(side="left", padx=(0, 10))
+            logo_label.pack(anchor="w", padx=8, pady=(4, 8))
         except Exception:
             pass
 
-        text_col = ttk.Frame(header)
-        text_col.pack(side="left", anchor="w")
-        ttk.Label(text_col, text="TS4RLS — The Sims 4 Random Loading Screen", font=("", 13, "bold")).pack(anchor="w")
-        ttk.Label(text_col, text=f"v{_get_version()}").pack(anchor="w")
+        body = self._build_scrollable_body(outer)
 
-        update_row = ttk.Frame(text_col)
+        ttk.Label(body, text=f"v{_get_version()}", font=("", 13, "bold")).pack(anchor="w")
+
+        update_row = ttk.Frame(body)
         update_row.pack(anchor="w", pady=(4, 0))
         self._update_url = update_checker.RELEASES_PAGE_URL
         self.update_status_var = tk.StringVar(value="Checking for updates...")
@@ -795,8 +928,6 @@ class App(tk.Tk):
         # Not packed until an update is actually found (see _on_update_check_result).
         self.update_check_btn = ttk.Button(update_row, text="Check again", command=self._start_update_check)
         self.update_check_btn.pack(side="left", padx=(8, 0))
-
-        body = self._build_scrollable_body(outer)
 
         ttk.Label(
             body,
@@ -846,8 +977,10 @@ class App(tk.Tk):
 
         self.changelog_text = scrolledtext.ScrolledText(
             body, wrap="word", font=("Segoe UI", 9), padx=8, pady=6, height=16, state="disabled",
+            highlightthickness=0,
         )
         self.changelog_text.pack(fill="both", expand=True, pady=(0, 8))
+        self._use_ttk_scrollbar(self.changelog_text)
 
         ct = self.changelog_text
         ct.tag_configure("h2", font=("Segoe UI", 12, "bold"), spacing1=14, spacing3=4)
@@ -973,11 +1106,41 @@ class App(tk.Tk):
             messagebox.showerror("Failed", f"Couldn't save the zip: {exc}")
 
 
+def _attach_parent_console():
+    # The exe is built --windowed (see src/build/executable_builder.py),
+    # so it has no console of its own -- print() below would otherwise go
+    # nowhere. If this was launched from an existing terminal, attach to
+    # it and rebind stdout/stderr so --generate's output actually shows up
+    # there. Only relevant for a frozen Windows build -- `python gui.py`
+    # from source already has a normal console, and if there's no parent
+    # console to attach to (e.g. double-clicked from Explorer), this is a
+    # no-op and --generate just stays silent, same as before.
+    if not (paths.is_frozen() and sys.platform == "win32"):
+        return
+    try:
+        import ctypes
+        ATTACH_PARENT_PROCESS = -1
+        if ctypes.windll.kernel32.AttachConsole(ATTACH_PARENT_PROCESS):
+            sys.stdout = open("CONOUT$", "w")
+            sys.stderr = open("CONOUT$", "w")
+    except Exception:
+        pass
+    # No parent console (e.g. double-clicked from Explorer/a Steam
+    # shortcut): a --windowed build's sys.stdout/stderr may be None,
+    # which would crash the print() calls below. Give them somewhere
+    # harmless to write instead.
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w")
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w")
+
+
 def main():
     argv = sys.argv[1:]
     headless = "--generate" in argv
 
     if headless:
+        _attach_parent_console()
         from src.cli import cli_colors
 
         try:

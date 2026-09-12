@@ -7,7 +7,12 @@ piping output or redirecting to a file never leaves stray escape codes.
 import os
 import sys
 
-ENABLED = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+# sys.stdout is None in a --windowed PyInstaller build (see
+# src/build/executable_builder.py) until/unless gui.py's
+# _attach_parent_console() rebinds it -- which happens after this module
+# is first imported, via gui.py's own `from src.cli import config_editor`
+# chain -- so this can't assume sys.stdout is a real stream yet.
+ENABLED = sys.stdout is not None and sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
 if ENABLED and os.name == "nt":
     try:

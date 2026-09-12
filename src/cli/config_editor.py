@@ -26,6 +26,8 @@ SETTINGS = [
     ("non_interactive", "bool", 'Never block on the "press any key to close" prompt', False, True),
     ("target_width", "int", "Loading screen output width", False, 1920),
     ("target_height", "int", "Loading screen output height", False, 1080),
+    ("launch_via_steam", "bool", "Launch The Sims 4 via Steam (steam://) instead of a direct .exe", False, True),
+    ("game_folder", "str", "Sims 4 game install folder (only used when not launching via Steam)", False, ""),
 ]
 
 

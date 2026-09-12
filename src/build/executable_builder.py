@@ -113,7 +113,14 @@ def build():
             [
                 sys.executable, "-m", "PyInstaller",
                 "--onefile",
-                "--console",  # needed for --generate output; the GUI still opens fine
+                # --windowed (no console subsystem): a --console build
+                # allocates a console for every launch, including a plain
+                # GUI one, which briefly flashes a command-prompt window
+                # before gui.py's own startup code can hide it. --generate
+                # instead attaches to the LAUNCHING terminal's own console
+                # (AttachConsole) at runtime when one exists -- see
+                # gui.py's main().
+                "--windowed",
                 f"--name={APP_EXE_NAME}",
                 f"--distpath={DIST_DIR}",
                 f"--workpath={build_dir}",

@@ -6,7 +6,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it, then launch the game yourself and get a fresh screen every time.
 
-**Version 4.4.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 4.5.0** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -77,15 +77,15 @@ When `is_vertical` is `true`, the app randomly picks **two portrait-oriented ima
 
 ## Steam artwork
 
-`assets/steam/` has a full set of custom Steam library artwork for adding
-TS4RLS to your Steam library as a non-Steam game — see
-**[docs/STEAM_GUIDE.md](docs/STEAM_GUIDE.md)** for the asset list and how to
-apply it.
+`assets/steam/` has a full set of custom Steam library artwork (grid
+capsules, hero, logo) for adding TS4RLS to your Steam library as a
+non-Steam game.
 
 **[⬇ Download TS4RLS_Steam_Assets.zip](https://github.com/TS4RLS/Engine/raw/steam_assets/TS4RLS_Steam_Assets.zip)**
 — always up to date with the latest release, no need to clone the repo.
-(Also available from the About tab's **Save Steam artwork (.zip)...** button,
-or as an asset on any [Release](https://github.com/TS4RLS/Engine/releases).)
+Also available from **[ts4rls.stuxie.dev/steam](https://ts4rls.stuxie.dev/steam)**,
+the About tab's **Save Steam artwork (.zip)...** button, or as an asset on
+any [Release](https://github.com/TS4RLS/Engine/releases).
 
 ---
 
@@ -131,7 +131,7 @@ just download the executable above.
 - `pytest -v` runs the test suite (`.github/workflows/ci.yml` runs the same
   on every push/PR).
 
-See **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** for the full project
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full project
 layout and release flow.
 
 ---

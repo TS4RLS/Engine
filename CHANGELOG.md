@@ -5,6 +5,89 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.5.0] - 2026-09-12
+
+### Added
+- **"Launch The Sims 4"** button on the Home tab. Launches via Steam
+  (`steam://rungameid/1222670`) by default; uncheck the new "Launch via
+  Steam" setting in the Build tab and set a **game folder** instead for
+  a direct `TS4_x64.exe`/`TS4.exe` launch (EA App/Origin installs, or
+  anyone who'd rather not go through Steam).
+
+### Fixed
+- **Link/hint/error label colors weren't rendering the theme's accent
+  color** — `Link.TLabel`/`Hint.TLabel`/`Error.TLabel` were only ever
+  defined inside `theme_create()`'s `settings` dict; `style.lookup()`
+  correctly reported their configured colors, but ttk didn't reliably
+  apply a compound style's own foreground override when it's set that
+  way, so links rendered in the base text color instead. Fixed by
+  configuring them via plain `style.configure(...)` calls issued after
+  `style.theme_use()` activates the theme, instead.
+- **Window icon still showed Tk's stock feather icon in the Windows
+  taskbar/Alt-Tab switcher** — `iconphoto()` alone sets the title-bar
+  icon but doesn't reliably replace the cached taskbar icon on Windows.
+  Now also calls `iconbitmap(default=...)` with `assets/icon.ico` on
+  Windows — and specifically *before* `iconphoto()`, since calling it
+  afterwards resets the taskbar icon back to the interpreter's own icon
+  (confirmed by direct A/B testing).
+- **Launching the built Windows executable popped a console window
+  before the GUI appeared** — the exe was built with PyInstaller's
+  `--console` (so `--generate` could still print output when launched
+  from a terminal/shortcut), which allocates a console for every launch
+  including a plain GUI one; hiding it from within gui.py only happened
+  after Python/Tk had already finished starting up, so the console
+  still visibly flashed open first. Now built `--windowed` instead (no
+  console at all, ever), and `--generate` attaches to the *launching*
+  terminal's own console at runtime (`AttachConsole`) when one exists,
+  instead of allocating a new one of its own.
+- **The app never actually opened on a fresh install (or after clearing
+  app state)** — the first-launch disclaimer dialog is a `Toplevel`
+  created while the main window is still `withdraw()`n, and on Windows,
+  a `Toplevel` made `.transient()` for a still-withdrawn owner never
+  gets mapped at all (confirmed by direct testing, isolated from the
+  rest of the app). The dialog silently never appeared, `wait_window()`
+  blocked forever, and the app looked hung with no window whatsoever.
+  Dropping `.transient(self)` for this dialog fixes it — `grab_set()`
+  already made it modal without needing that.
+- **Dark mode showed stark white/gray borders** on the notebook's edge,
+  every `Entry` field, checkbox indicators, and scrollbars — the custom
+  ttk theme is built on "clam", which draws each of those as a 3D bevel
+  using `lightcolor`/`darkcolor` (and, for checkbuttons, their own
+  upper/lower border options) that default to a fixed system gray
+  regardless of the theme's `bordercolor`. All now pinned to the
+  theme's own colors so every edge renders as one flat, correctly
+  dark (or light) line instead.
+
+### Changed
+- Window title reformatted to `TS4RLS (The Sims 4 Random Loading
+  Screen) — vX.Y.Z`.
+- Checkbox indicators now use the theme's accent/panel colors instead
+  of clam's default light-gray look.
+- The theme toggle button moved from a persistent bar above the tabs
+  into the Home tab.
+- About tab now shows the full logo banner (`assets/logo.png`) instead
+  of a small icon plus a separate text header.
+- The Home/Build action logs and the changelog viewer now use a themed
+  `ttk.Scrollbar` instead of `scrolledtext.ScrolledText`'s built-in one —
+  Tk delegates that widget's rendering to Windows' native Visual Styles
+  engine, so it always rendered as a stark white scrollbar regardless of
+  the active theme.
+- Regenerated every Steam library asset (`assets/steam/`) from the
+  current `icon.png`/`logo.png` — they'd drifted out of sync with the
+  app's own branding since v4.0.0. Background patterns also switched to
+  smaller, denser icon tiles instead of a few oversized, sparse ones,
+  and `cover.png`/`logo.png` now center the title and subtitle text
+  independently instead of as one left-aligned block (which left the
+  narrower "TS4RLS" title looking off-center under the icon). Added a
+  second logo style, `logo_horizontal.png` (icon beside the wordmark,
+  rather than stacked above it), as an alternative for the same Library
+  logo slot. Added `src/build/steam_asset_builder.py` so none of this
+  has to be redone by hand again.
+- `CONTRIBUTING.md` moved back to the repo root (out of `docs/`, which
+  no longer exists), matching every other repo doc.
+- `STEAM_GUIDE.md` removed — the Steam artwork download and setup info
+  it held now lives on the website (`ts4rls.stuxie.dev/steam`) instead.
+
 ## [4.4.0] - 2026-09-10
 
 ### Added

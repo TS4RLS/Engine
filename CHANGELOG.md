@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.7.0] - 2026-09-12
+### Added
+- **`scripts/generate_icon.py`**, matching the sibling TWRAR project's
+  convention: reproduces the icon/logo (three diamond "photo frame" tiles
+  - a sun/moon dot and a tree, on a green rounded square) in code instead
+  of only existing as hand-made PNGs, so it can be regenerated/tweaked
+  going forward. `assets/icon.png`/`icon.ico`/`icon.icns`/`logo.png`
+  regenerated from it (visually unchanged).
+
 ## [4.6.0] - 2026-09-12
 ### Changed
 - **`build.bat`/`build.sh` are gone.** `src/build/executable_builder.py` is

@@ -9,9 +9,9 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 ## Getting set up
 
 1. Python 3.6+
-2. `pip install -r requirements.txt` (installs `pytest` and `Pillow`; both
-   plus `PyInstaller` are also installed automatically on first run of
-   `gui.py`/the exe builder if missing)
+2. `pip install -r requirements.txt` (installs `pytest`, `Pillow`, and
+   `PySide6`; `PyInstaller` is also installed automatically on first run
+   of the exe builder if missing)
 3. Run `python gui.py` once — the Build tab writes `config.json` for
    you. (See the [README](../README.md) for the full option list if you'd
    rather edit it by hand, or copy `config.example.json`.)
@@ -19,24 +19,35 @@ Personal tool for generating a randomized Sims 4 loading screen mod.
 ## Project layout
 
 ```
-gui.py       single entry point at the repo root — the tkinter GUI (Home,
-             Build, About tabs), and (--generate) a headless one-shot run.
-             This is what gets compiled into the distributed executable.
-scripts/
-  build_release_files.py  the PyInstaller build script
+gui.py       single entry point at the repo root — thin launcher for the
+             PySide6/Qt GUI (Home, Build, About tabs; see src/gui/), and
+             (--generate) a headless one-shot run. This is what gets
+             compiled into the distributed executable.
+scripts/    dev/CI-only tooling — not used by the app itself at runtime
+  build_release_files.py  builds the release TS4RLS executable, or
+                           (--steam-zip) TS4RLS_Steam_Assets.zip
+  generate_icon.py        regenerates assets/icon.png/.ico/.icns/logo.png
+runner.py   separate, minimal, GUI-less entry point for the standalone
+            runner executable (see src/gui/runner_builder.py) — a Steam/
+            CurseForge launch-target replacement, not the main app
 src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
             location resolution), app_state.py (disclaimer flag + recent
-            build history, kept separate from user-editable config.json)
+            build history, kept separate from user-editable config.json),
+            launcher.py (launch The Sims 4 via Steam or a direct exe)
   core/     generator.py (the actual mod generation logic), renamer.py
   cli/      cli_colors.py, config_editor.py (config.json read/write
-            helpers used by the GUI and the build script)
+            helpers used by the GUI)
+  gui/      theme.py (QSS + light/dark tokens), disclaimer.py, workers.py
+            (QThread workers), main_window.py (Home/Build/About tabs),
+            runner_builder.py (builds runner.py — only used by the GUI's
+            own Build tab, not run directly)
 dist/       built executables land here (gitignored) — not the repo root
 ```
 
 There is no text-menu CLI — the GUI is the only interactive interface.
 Run `python gui.py` from source to launch it directly; end users instead
-download the executable built by `python scripts/build_release_files.py`.
+download the executable built by `scripts/build_release_files.py`.
 
 ## Making a change
 
@@ -62,9 +73,10 @@ loading correctly in-game, the executable build), verify manually:
   `images_folder`/`mods_folder` and confirm the loading
   screen changes in-game. `python gui.py` with no args opens the GUI.
 - If you touched `scripts/build_release_files.py`, rebuild the
-  executable locally (`python scripts/build_release_files.py`) and confirm the built app
-  in `dist/` still launches (GUI by default, `--generate` from a
-  terminal) and produces the same result as running `gui.py` directly.
+  executable locally (`python scripts/build_release_files.py`) and
+  confirm the built app in `dist/` still launches (GUI by default,
+  `--generate` from a terminal) and produces the same result as running
+  `gui.py` directly.
 
 ## Versioning
 
@@ -80,7 +92,7 @@ comments) don't need a bump.
 1. Update `CHANGELOG.md`.
 2. Bump `VERSION.md`.
 3. Update `README.md` if behavior changed.
-4. Run `commit.bat "message"` (or `commit.sh` on POSIX) — it commits and
+4. Run `commit.sh` (or `commit.bat` on Windows) — it commits and
    tags `vX.Y.Z` from `VERSION.md`.
 
 ## Reporting a bug

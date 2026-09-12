@@ -5,6 +5,65 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.0.0] - 2026-09-12
+
+### Changed
+- **The GUI is rewritten from Tkinter to PySide6/Qt** (`src/gui/`:
+  `theme.py`, `disclaimer.py`, `workers.py`, `main_window.py`,
+  `runner_builder.py`) — a MAJOR bump since this touches how the app
+  looks and runs top to bottom, even though config.json's own format is
+  unchanged. Motivated by a run of Tk-specific bugs this session turned
+  up (the first-launch disclaimer silently never appearing at all on a
+  fresh install, a family of white/gray border bugs in dark mode from
+  clam theme bevel colors) that simply don't exist as a category in Qt.
+  Worker threads now emit Qt signals straight to the UI instead of a
+  manual `queue.Queue` + polling loop; the About tab's scrollable body
+  is a native `QScrollArea` instead of a hand-rolled canvas+scrollbar;
+  the changelog viewer renders real HTML instead of manually walking
+  text with per-run tag_configure() calls. `requirements.txt` gains
+  `PySide6>=6.7`.
+- Default window size bumped to 960×760 (was 780×640) — the Build tab
+  needed more room once `curseforge_mode`/`game_folder` were added.
+- `.github/workflows/release.yml`'s Linux job now installs Qt's runtime
+  libraries (`libegl1`/`libopengl0`) instead of `python3-tk`.
+- `scripts/build_release_files.py` rewritten in the sibling TWRAR
+  project's own style (`pathlib`, installs its own dependencies,
+  `PyInstaller.__main__.run()` instead of a subprocess call) — still
+  builds the release exe by default, or `TS4RLS_Steam_Assets.zip` with
+  `--steam-zip`.
+
+### Added
+- **A standalone "runner" executable** (`runner.py`, built via
+  `src/gui/runner_builder.py`) — a separate, GUI-less exe meant to
+  replace the game's own launch target in Steam (a non-Steam-game
+  shortcut) or CurseForge: running it regenerates the loading screen
+  from the current config and launches the game, no window of its own.
+  The Home/Build tabs' "Build executable" button now builds *this*
+  (works from a shipped exe too — it only needs a system Python capable
+  of running PyInstaller, not a source checkout), not the main app,
+  which is still `python scripts/build_release_files.py` — a GUI button
+  for that was removed along with the old Tk build, since rebuilding the
+  app itself from source isn't something a shipped-exe user can do
+  anyway. New **`curseforge_mode`** setting names the built runner the
+  same as The Sims 4's own executable (`TS4_x64`) instead of the default
+  `RLSRunner`, for launchers that expect a specific filename. The built
+  runner's location (not dist/ — a source-checkout concept that isn't
+  guaranteed to exist or be writable next to a shipped exe; the same
+  per-user directory config.json itself uses) is shown on both tabs with
+  "Copy path"/"Copy folder" buttons — the tool never places it into
+  Steam/CurseForge's config itself, only points at where it landed.
+- `src/common/launcher.py`: the Steam-URI/direct-exe game-launch logic,
+  extracted out of the GUI so `runner.py` can share it without any Qt
+  dependency.
+- `paths.user_data_dir()`: public wrapper around the existing per-user
+  data directory logic, for callers (the runner builder) outside
+  `src/common` that need it.
+
+### Fixed
+- `runner_builder.py` checked for PyInstaller *after* already importing
+  it — on a machine without PyInstaller installed, this crashed before
+  ever reaching the auto-install step meant to handle exactly that case.
+
 ## [4.7.0] - 2026-09-12
 ### Added
 - **`scripts/generate_icon.py`**, matching the sibling TWRAR project's

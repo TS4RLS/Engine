@@ -32,9 +32,9 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install Linux Tk support
+      - name: Install Linux Qt runtime libraries
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y python3-tk
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0
 
       - name: Install dependencies
         run: |
@@ -67,11 +67,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
       - name: Build TS4RLS_Steam_Assets.zip
-        run: |
-          mkdir -p dist_out
-          cd assets/steam
-          zip -r ../../dist_out/TS4RLS_Steam_Assets.zip .
+        run: python scripts/build_release_files.py --steam-zip
 
       - name: Publish to steam_assets branch
         run: |
@@ -79,7 +81,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout --orphan steam_assets
           git reset --hard
-          cp dist_out/TS4RLS_Steam_Assets.zip .
+          cp dist/TS4RLS_Steam_Assets.zip .
           git add TS4RLS_Steam_Assets.zip
           git commit -m "Update Steam assets (${{ github.ref_name }})"
           git push origin steam_assets --force
@@ -88,7 +90,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: steam-assets
-          path: dist_out/TS4RLS_Steam_Assets.zip
+          path: dist/TS4RLS_Steam_Assets.zip
 
   release:
     needs: [build, steam-assets]

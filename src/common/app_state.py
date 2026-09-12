@@ -57,3 +57,16 @@ def record_build(exe_path: str) -> None:
     history.insert(0, {"path": exe_path, "timestamp": datetime.now().isoformat(timespec="seconds")})
     state["recent_builds"] = history[:MAX_BUILD_HISTORY]
     _save(state)
+
+
+def load_runner_build() -> dict:
+    """The most recent runner executable build (see
+    src/gui/runner_builder.py) -- separate from load_build_history()
+    above, which tracks builds of the main app itself, not the runner."""
+    return _load().get("runner_build") or {}
+
+
+def record_runner_build(exe_path: str) -> None:
+    state = _load()
+    state["runner_build"] = {"path": exe_path, "timestamp": datetime.now().isoformat(timespec="seconds")}
+    _save(state)

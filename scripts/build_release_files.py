@@ -1,154 +1,141 @@
+"""Builds the files a GitHub Release needs: the standalone TS4RLS
+executable, and TS4RLS_Steam_Assets.zip.
+
+Run with: python scripts/build_release_files.py            (the exe)
+          python scripts/build_release_files.py --steam-zip (the zip)
+Installs its own dependencies (requirements.txt + PyInstaller) first, no
+separate build.bat/build.sh wrapper or manual `pip install` needed.
+
+PyInstaller can't cross-compile - run the exe build on each platform
+(Windows, macOS, Linux) you want a native build for; that's also what the
+Release GitHub Actions workflow does, once per OS runner. The Steam
+assets zip has no platform dependency and only needs building once.
+
+This is for release artifacts only -- NOT the per-user runner executable
+(see src/gui/runner_builder.py for that), which is a completely separate,
+GUI-less build only the app itself triggers, from its own Build tab.
 """
-Build script — compiles gui.py (repo root) into a standalone, self-contained
-executable for the platform you run this on (bundled Python, Pillow,
-tkinter, and the assets they need — nothing else required on the target
-machine). PyInstaller can't cross-compile, so run this on each platform
-you want a native build for.
+from __future__ import annotations
 
-Run this whenever you want to create or refresh the executable:
-    python scripts/build_release_files.py
-
-The built executable lands in dist/, not the repo root. Double-click it
-for the GUI, or run it with --generate for a headless one-shot run
-(unattended use, other launchers, a Steam shortcut).
-"""
-
-import os
-import sys
-import shutil
 import subprocess
+import sys
+import zipfile
+from pathlib import Path
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR   = os.path.dirname(SCRIPT_DIR)
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
 
-from src.cli import cli_colors
-from src.common import app_state
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))  # so `from src.common import app_state` resolves below
 
-APP_EXE_NAME = "TS4RLS"
-DIST_DIR     = os.path.join(ROOT_DIR, "dist")
-
-IS_WINDOWS = sys.platform.startswith("win")
-IS_MACOS   = sys.platform == "darwin"
+VERSION = (REPO_ROOT / "VERSION.md").read_text(encoding="utf-8").strip()
+DIST_DIR = REPO_ROOT / "dist"
+BUILD_DIR = REPO_ROOT / "build"
+STEAM_ZIP_NAME = "TS4RLS_Steam_Assets.zip"
 
 _DATA_SEP = ";" if IS_WINDOWS else ":"
-_BUNDLED_DATA = [
-    (os.path.join("assets", "template.package"), "assets"),
-    (os.path.join("assets", "icon.png"), "assets"),
-    (os.path.join("assets", "logo.png"), "assets"),
-    (os.path.join("assets", "author.png"), "assets"),
-    (os.path.join("assets", "steam"), os.path.join("assets", "steam")),
-    ("VERSION.md", "."),
-    ("CHANGELOG.md", "."),
+
+
+def _add_data(src: Path, dest: str) -> str:
+    return f"--add-data={src}{_DATA_SEP}{dest}"
+
+
+def _icon_args() -> list[str]:
+    if IS_WINDOWS:
+        icon = REPO_ROOT / "assets" / "icon.ico"
+    elif IS_MACOS:
+        icon = REPO_ROOT / "assets" / "icon.icns"
+    else:
+        # PyInstaller doesn't support icon embedding for plain Linux/ELF
+        # binaries - nothing useful to pass here.
+        return []
+    return [f"--icon={icon}"] if icon.is_file() else []
+
+
+COMMON_ARGS = [
+    "--onefile",
+    "--noconfirm",
+    f"--distpath={DIST_DIR}",
+    f"--workpath={BUILD_DIR}",
+    f"--specpath={BUILD_DIR}",
+    f"--paths={REPO_ROOT}",
 ]
 
 
-def ensure_pyinstaller():
-    import importlib.util
-    if importlib.util.find_spec("PyInstaller") is None:
-        print("PyInstaller not found — installing...")
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "pyinstaller", "--quiet"]
-        )
-        print("PyInstaller installed.\n")
+def ensure_dependencies() -> None:
+    # No build.bat/build.sh wrapper to install these first - this script
+    # is run directly (`python scripts/build_release_files.py`), so it
+    # installs its own runtime + build dependencies before importing
+    # PyInstaller.
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "-r", str(REPO_ROOT / "requirements.txt"), "-q"]
+    )
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller", "-q"])
 
 
-def _get_version() -> str:
-    try:
-        with open(os.path.join(ROOT_DIR, "VERSION.md"), "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except OSError:
-        return "?"
+def build_gui() -> None:
+    import PyInstaller.__main__
+
+    # The About tab and disclaimer dialog read assets/logo.png,
+    # CHANGELOG.md, and VERSION.md at runtime via src.common.paths
+    # (which resolves to sys._MEIPASS in a frozen build) - bundle them as
+    # data so those lookups succeed instead of silently no-op'ing
+    # (missing icon/logo/blank changelog) in the packaged exe.
+    PyInstaller.__main__.run([
+        str(REPO_ROOT / "gui.py"),
+        "--name=TS4RLS",
+        "--windowed",
+        # --generate still attaches to the launching terminal's own
+        # console at runtime (see gui.py's _attach_parent_console) rather
+        # than needing --console here, which would otherwise flash a
+        # console window open on every plain GUI launch too.
+        *_icon_args(),
+        _add_data(REPO_ROOT / "assets", "assets"),
+        _add_data(REPO_ROOT / "CHANGELOG.md", "."),
+        _add_data(REPO_ROOT / "VERSION.md", "."),
+        *COMMON_ARGS,
+    ])
+
+    exe_path = DIST_DIR / ("TS4RLS.exe" if IS_WINDOWS else "TS4RLS")
+    if exe_path.is_file():
+        # So the running app's own Home tab ("Latest build") can show
+        # this -- it's a separate developer/dev-tooling script, but the
+        # GUI still reads the same per-user app_state.json.
+        from src.common import app_state
+        app_state.record_build(str(exe_path))
 
 
-def _exe_suffix() -> str:
-    # PyInstaller only appends .exe when building on Windows; macOS/Linux
-    # binaries come out with no extension.
-    return ".exe" if IS_WINDOWS else ""
+def build_steam_zip() -> Path:
+    """Zips assets/steam/ into dist/TS4RLS_Steam_Assets.zip -- the same
+    file the website's /assets/steam redirect and every GitHub Release
+    point at. No PyInstaller/platform dependency, unlike build_gui()
+    above, but it's still a release artifact, so it lives here rather
+    than in its own script."""
+    steam_dir = REPO_ROOT / "assets" / "steam"
+    DIST_DIR.mkdir(parents=True, exist_ok=True)
+    zip_path = DIST_DIR / STEAM_ZIP_NAME
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for item in sorted(steam_dir.iterdir()):
+            zf.write(item, arcname=item.name)
+
+    print(f"Done. Steam assets zip: {zip_path}")
+    return zip_path
 
 
-def _data_args() -> list:
-    args = []
-    for src, dest in _BUNDLED_DATA:
-        src_path = os.path.join(ROOT_DIR, src)
-        if os.path.exists(src_path):
-            args.append(f"--add-data={src_path}{_DATA_SEP}{dest}")
-        else:
-            print(cli_colors.warning(f"{src} not found — skipping from the bundle."))
-    return args
+def main() -> None:
+    if "--steam-zip" in sys.argv[1:]:
+        build_steam_zip()
+        return
 
-
-def _icon_args() -> list:
-    if IS_WINDOWS:
-        ico_path = os.path.join(ROOT_DIR, "assets", "icon.ico")
-    elif IS_MACOS:
-        ico_path = os.path.join(ROOT_DIR, "assets", "icon.icns")
-    else:
-        # PyInstaller doesn't support icon embedding for plain Linux/ELF
-        # binaries, so there's nothing useful to pass here.
-        return []
-
-    if os.path.isfile(ico_path):
-        return [f"--icon={ico_path}"]
-    print(cli_colors.warning(f"{os.path.relpath(ico_path, ROOT_DIR)} not found — building without custom icon."))
-    return []
-
-
-def build():
-    print(cli_colors.banner(
-        "TS4RLS - The Sims 4 Random Loading Screen - Executable Builder",
-        f"v{_get_version()}\nBuilt & Maintained by StuxieDev",
-    ))
-
-    ensure_pyinstaller()
-    os.makedirs(DIST_DIR, exist_ok=True)
-
-    build_dir = os.path.join(ROOT_DIR, f"_build_temp_{APP_EXE_NAME}")
-    entry = os.path.join(ROOT_DIR, "gui.py")
-
-    try:
-        print(f"\nRunning PyInstaller for '{APP_EXE_NAME}'...")
-        subprocess.check_call(
-            [
-                sys.executable, "-m", "PyInstaller",
-                "--onefile",
-                # --windowed (no console subsystem): a --console build
-                # allocates a console for every launch, including a plain
-                # GUI one, which briefly flashes a command-prompt window
-                # before gui.py's own startup code can hide it. --generate
-                # instead attaches to the LAUNCHING terminal's own console
-                # (AttachConsole) at runtime when one exists -- see
-                # gui.py's main().
-                "--windowed",
-                f"--name={APP_EXE_NAME}",
-                f"--distpath={DIST_DIR}",
-                f"--workpath={build_dir}",
-                f"--specpath={build_dir}",
-                f"--paths={ROOT_DIR}",      # so PyInstaller can resolve `from src.x import y`
-                *_data_args(),
-                *_icon_args(),
-                entry,
-            ],
-            cwd=ROOT_DIR,
-        )
-    finally:
-        if os.path.isdir(build_dir):
-            shutil.rmtree(build_dir, ignore_errors=True)
-
-    exe_path = os.path.join(DIST_DIR, APP_EXE_NAME + _exe_suffix())
-    if not os.path.isfile(exe_path):
-        print("\n" + cli_colors.error(f"Build finished but executable was not found: {exe_path}"))
-        sys.exit(1)
-
-    if not IS_WINDOWS:
-        os.chmod(exe_path, 0o755)
-
-    app_state.record_build(exe_path)
-
-    print(f"\nDone!  App ready: {exe_path}")
-    print("Double-click for the GUI, or run with --generate.")
+    print(f"Building TS4RLS v{VERSION} standalone executable for {sys.platform}...")
+    print("Installing build dependencies...")
+    ensure_dependencies()
+    build_gui()
+    print(f"\nDone. Output in {DIST_DIR}:")
+    print("  - TS4RLS  (double-click to run - .exe on Windows, .app on macOS)")
 
 
 if __name__ == "__main__":
-    build()
+    main()

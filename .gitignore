@@ -4,4 +4,5 @@ config.json
 app_state.json
 *.exe
 /dist/
+/build/
 .curseclient

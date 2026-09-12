@@ -28,6 +28,7 @@ SETTINGS = [
     ("target_height", "int", "Loading screen output height", False, 1080),
     ("launch_via_steam", "bool", "Launch The Sims 4 via Steam (steam://) instead of a direct .exe", False, True),
     ("game_folder", "str", "Sims 4 game install folder (only used when not launching via Steam)", False, ""),
+    ("curseforge_mode", "bool", "Name the built runner executable the same as The Sims 4's own exe (TS4_x64), for CurseForge/launcher integration -- otherwise it's named RLSRunner", False, False),
 ]
 
 

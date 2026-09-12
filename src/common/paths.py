@@ -49,6 +49,16 @@ def _user_data_dir(app_name: str) -> str:
     return os.path.join(base, app_name)
 
 
+def user_data_dir() -> str:
+    """The OS-appropriate per-user directory this app's own data lives in
+    (same one config.json/app_state.json use in non-portable installs).
+    Public, unlike _user_data_dir(), for callers outside this module that
+    need a writable, always-available location -- e.g. the runner
+    builder, which can't assume dist/ exists or is writable from a
+    shipped exe."""
+    return _user_data_dir(APP_NAME)
+
+
 def resolve_config_path() -> str:
     """Where config.json should be read from/written to, in priority order:
 

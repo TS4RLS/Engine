@@ -5,6 +5,13 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.1.1] - 2026-09-12
+
+### Fixed
+- `.gitignore` was missing `.venv/`/`venv/` (present in the sibling
+  TWRAR/Engine's `.gitignore` but not here) — a local virtualenv could
+  get committed by accident.
+
 ## [5.1.0] - 2026-09-12
 
 ### Added

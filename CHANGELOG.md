@@ -5,6 +5,25 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.2.0] - 2026-09-12
+
+### Added
+- `src/build/create_steam_assets.py` now also syncs its output into the
+  sibling Website repo's `assets/steam/` (which publishes its own copy for
+  ts4rls.stuxie.dev/steam), the same way `create_project_assets.py` already
+  syncs `icon.png`/`logo.png`/`favicon.ico` — so the published Steam art
+  can no longer silently drift out of sync with the Engine's copy.
+
+### Fixed
+- **`create_steam_assets.py` clipped/overlapped the wordmark** when
+  building `assets/steam/*` from the current `logo.png` — it cropped the
+  wordmark out at a hardcoded x/y split tuned for an older layout, which
+  cut a few pixels off the left of the tagline and clipped the bottom of
+  the acronym in the stacked variant (`assets/steam/logo.png`), making it
+  crowd into the tagline below. Both splits are now found dynamically
+  from the image's own alpha channel, so they stay correct regardless of
+  the wordmark's exact layout.
+
 ## [5.1.4] - 2026-09-12
 
 ### Fixed

@@ -1,7 +1,8 @@
 """
 Steam library artwork generator — regenerates everything in assets/steam/
 from the current assets/icon.png and assets/logo.png, so the Steam art never
-drifts out of sync with the app's own branding again.
+drifts out of sync with the app's own branding again. Also syncs the result
+into the sibling Website repo's assets/steam/, which publishes its own copy.
 
 Run this whenever icon.png or logo.png change:
     python src/build/create_steam_assets.py
@@ -32,6 +33,11 @@ ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 STEAM_DIR = os.path.join(ASSETS_DIR, "steam")
 ICON_PATH = os.path.join(ASSETS_DIR, "icon.png")
 LOGO_PATH = os.path.join(ASSETS_DIR, "logo.png")
+
+# The Website repo publishes its own copy of assets/steam/ (see
+# ts4rls.stuxie.dev/steam) - kept in sync here the same way
+# create_project_assets.py syncs icon.png/logo.png/favicon.ico.
+WEBSITE_STEAM_DIR = os.path.join(os.path.dirname(ROOT_DIR), "Website", "assets", "steam")
 
 # Sampled from the current icon.png / logo.png so regenerated art always
 # matches the app's actual brand colors, not a hand-picked approximation.
@@ -296,6 +302,14 @@ def build():
         dest = os.path.join(STEAM_DIR, name)
         image.save(dest)
         print(f"  wrote {os.path.relpath(dest, ROOT_DIR)} ({image.width}x{image.height})")
+
+    if os.path.isdir(os.path.dirname(WEBSITE_STEAM_DIR)):
+        os.makedirs(WEBSITE_STEAM_DIR, exist_ok=True)
+        for name, image in outputs.items():
+            image.save(os.path.join(WEBSITE_STEAM_DIR, name))
+        print(f"\nSynced Website copy at {WEBSITE_STEAM_DIR}")
+    else:
+        print(f"\nSkipped Website copy - no sibling checkout at {WEBSITE_STEAM_DIR}")
 
     print("\nDone.")
 

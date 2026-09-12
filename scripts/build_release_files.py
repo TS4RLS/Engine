@@ -6,7 +6,7 @@ machine). PyInstaller can't cross-compile, so run this on each platform
 you want a native build for.
 
 Run this whenever you want to create or refresh the executable:
-    python src/build/executable_builder.py
+    python scripts/build_release_files.py
 
 The built executable lands in dist/, not the repo root. Double-click it
 for the GUI, or run it with --generate for a headless one-shot run
@@ -19,7 +19,7 @@ import shutil
 import subprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR   = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+ROOT_DIR   = os.path.dirname(SCRIPT_DIR)
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 

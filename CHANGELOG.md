@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [4.6.0] - 2026-09-12
+### Changed
+- **`build.bat`/`build.sh` are gone.** `src/build/executable_builder.py` is
+  moved to `scripts/build_release_files.py` and run directly
+  (`python scripts/build_release_files.py`) instead of through an
+  OS-specific wrapper. `.github/workflows/release.yml` calls it the same
+  way, matching the sibling TWRAR project's convention.
+
 ## [4.5.0] - 2026-09-12
 
 ### Added

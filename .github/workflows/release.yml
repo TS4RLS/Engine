@@ -44,7 +44,7 @@ jobs:
 
       - name: Build executable
         shell: bash
-        run: ./build.sh
+        run: python scripts/build_release_files.py
 
       - name: Collect build artifacts
         shell: bash

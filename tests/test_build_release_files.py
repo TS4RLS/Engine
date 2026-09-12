@@ -1,5 +1,5 @@
 """
-Unit tests for src/build/executable_builder.py.
+Unit tests for scripts/build_release_files.py.
 
 Only the pure, platform-dependent helper logic is tested here. Actually
 invoking ensure_pyinstaller()/build() would shell out to PyInstaller,
@@ -9,7 +9,7 @@ logic, so it is intentionally left uncovered (see report).
 """
 import pytest
 
-from src.build import executable_builder as builder
+from scripts import build_release_files as builder
 
 
 def _patch_script_dir(monkeypatch, tmp_path):

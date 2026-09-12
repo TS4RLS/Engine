@@ -6,7 +6,7 @@
 
 Automatically picks a random image from a folder and installs it as your Sims 4 loading screen mod — run it, then launch the game yourself and get a fresh screen every time.
 
-**Version 5.1.1** — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version 5.1.2** — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Website: https://ts4rls.stuxie.dev  
 Repository: https://github.com/TS4RLS/Engine  
@@ -68,10 +68,30 @@ settings read-only and links to the Build tab to change them.
 | `rename_files` | | `false` | When `true`, renames every image in `images_folder` to a random 32-character alphanumeric name and converts it to JPEG before picking a random image |
 | `non_interactive` | | `true` | When `true`, never blocks on the "press any key to close" prompt |
 | `target_width` / `target_height` | | `1920` / `1080` | Loading screen output size |
+| `launch_via_steam` | | `true` | When `true`, launches The Sims 4 via `steam://` instead of a direct executable |
+| `game_folder` | | — | Sims 4 game install folder — only used when `launch_via_steam` is `false` |
+| `curseforge_mode` | | `false` | When `true`, the runner executable (see [Standalone runner](#standalone-runner) below) is named `TS4_x64` instead of `RLSRunner`, for CurseForge/launcher integrations that expect that filename |
 
 ### Vertical mode
 
 When `is_vertical` is `true`, the app randomly picks **two portrait-oriented images** and stitches them side-by-side into a single landscape loading screen. Use tall/portrait photos for best results. Set to `false` to use one image directly.
+
+---
+
+## Standalone runner
+
+The Build tab's **Build executable** button compiles a second, separate,
+GUI-less executable — `RLSRunner` by default, or `TS4_x64` if
+`curseforge_mode` is on. Running it regenerates the loading screen from
+your current `config.json` and launches the game, with no window or
+console of its own. Point Steam (as a non-Steam game shortcut) or
+CurseForge at it instead of — or renamed to replace — the game's own
+executable, and every normal launch gets a fresh loading screen
+automatically, no extra step.
+
+The Home tab shows the most recent runner build with buttons to copy its
+executable path or containing folder — it's never auto-placed into
+Steam/CurseForge's own config, you point them at it yourself.
 
 ---
 
@@ -145,6 +165,7 @@ These files in `assets/` are required at runtime/build time, not just artwork:
 - `icon.ico` / `icon.icns` / `icon.png` — the app's icon (window icon and the executable's icon)
 - `logo.png` — the wordmark logo
 - `author.png` — avatar shown next to the author link on the About tab
+- `checkbox_check.png` — the checkbox indicator's checked-state icon in the Qt GUI's theme
 
 `VERSION.md` and `CHANGELOG.md` at the repo root are also bundled into the
 executable — the GUI reads its own version from the former and renders the

@@ -34,7 +34,11 @@ src/
   common/   config_format.py (JSONC parse/dump), paths.py (config/asset
             location resolution), app_state.py (disclaimer flag + recent
             build history, kept separate from user-editable config.json),
-            launcher.py (launch The Sims 4 via Steam or a direct exe)
+            launcher.py (launch The Sims 4 via Steam or a direct exe),
+            update_checker.py (About tab's GitHub release check)
+  build/    steam_asset_builder.py (regenerates assets/steam/ from
+            icon.png/logo.png -- run directly, not part of the release
+            build; see the Steam artwork section in the README)
   core/     generator.py (the actual mod generation logic), renamer.py
   cli/      cli_colors.py, config_editor.py (config.json read/write
             helpers used by the GUI)

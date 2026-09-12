@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.1.2] - 2026-09-12
+
+### Fixed
+- README's config table was missing 3 real settings (`launch_via_steam`,
+  `game_folder`, `curseforge_mode`) and never documented the standalone
+  runner executable feature at all — added a "Standalone runner" section
+  and the missing table rows.
+- README's "Do not rename or remove" list was missing
+  `assets/checkbox_check.png` (the Qt theme's checked-checkbox icon).
+- CONTRIBUTING.md's project layout tree omitted `src/build/` (the Steam
+  asset generator) and `src/common/update_checker.py`.
+
 ## [5.1.1] - 2026-09-12
 
 ### Fixed

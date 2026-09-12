@@ -1,7 +1,7 @@
 """One-off generator for assets/icon.png, assets/icon.ico, assets/icon.icns,
 assets/logo.png.
 
-Run with: python scripts/generate_icon.py
+Run with: python src/scripts/generate_icon.py
 Requires Pillow (dev-only; not a runtime dependency of the app itself).
 
 Reproduces the existing hand-made icon/logo in code: three "photo frame"
@@ -14,7 +14,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-ASSETS = Path(__file__).resolve().parent.parent / "assets"
+ASSETS = Path(__file__).resolve().parent.parent.parent / "assets"
 ASSETS.mkdir(exist_ok=True)
 
 BG = (46, 125, 50, 255)      # green 800 - background, and the wordmark text

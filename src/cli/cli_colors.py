@@ -8,7 +8,7 @@ import os
 import sys
 
 # sys.stdout is None in a --windowed PyInstaller build (see
-# scripts/build_release_files.py) until/unless gui.py's
+# src/scripts/build_release_files.py) until/unless gui.py's
 # _attach_parent_console() rebinds it -- which happens after this module
 # is first imported, via gui.py's own `from src.cli import config_editor`
 # chain -- so this can't assume sys.stdout is a real stream yet.

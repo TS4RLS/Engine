@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.0.1] - 2026-09-12
+
+### Fixed
+- `cover.png`'s icon+wordmark block is now centered both horizontally
+  *and* vertically in the 600x900 canvas (`src/build/steam_asset_builder.py`'s
+  `build_cover()`) — it previously pinned the icon at a fixed `y=300`,
+  leaving a lot of empty patterned space below the text.
+
+### Changed
+- Moved `scripts/` into `src/scripts/` (`build_release_files.py`,
+  `generate_icon.py`) so all first-party source lives under `src/`.
+
 ## [5.0.0] - 2026-09-12
 
 ### Changed

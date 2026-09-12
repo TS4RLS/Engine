@@ -1,8 +1,8 @@
 """Builds the files a GitHub Release needs: the standalone TS4RLS
 executable, and TS4RLS_Steam_Assets.zip.
 
-Run with: python scripts/build_release_files.py            (the exe)
-          python scripts/build_release_files.py --steam-zip (the zip)
+Run with: python src/scripts/build_release_files.py            (the exe)
+          python src/scripts/build_release_files.py --steam-zip (the zip)
 Installs its own dependencies (requirements.txt + PyInstaller) first, no
 separate build.bat/build.sh wrapper or manual `pip install` needed.
 
@@ -25,7 +25,7 @@ from pathlib import Path
 IS_WINDOWS = sys.platform == "win32"
 IS_MACOS = sys.platform == "darwin"
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))  # so `from src.common import app_state` resolves below
 
@@ -65,7 +65,7 @@ COMMON_ARGS = [
 
 def ensure_dependencies() -> None:
     # No build.bat/build.sh wrapper to install these first - this script
-    # is run directly (`python scripts/build_release_files.py`), so it
+    # is run directly (`python src/scripts/build_release_files.py`), so it
     # installs its own runtime + build dependencies before importing
     # PyInstaller.
     subprocess.check_call(

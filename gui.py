@@ -5,7 +5,7 @@ Run standalone:
     python gui.py              -> GUI
     python gui.py --generate   -> headless, one-shot
 
-Use scripts/build_release_files.py to build the executable.
+Use src/scripts/build_release_files.py to build the executable.
 """
 
 import os
@@ -22,7 +22,7 @@ ICON_PATH = paths.resource_path(os.path.join("assets", "icon.ico"))
 
 
 def _attach_parent_console():
-    # The exe is built --windowed (see scripts/build_release_files.py),
+    # The exe is built --windowed (see src/scripts/build_release_files.py),
     # so it has no console of its own -- print() below would otherwise go
     # nowhere. If this was launched from an existing terminal, attach to
     # it and rebind stdout/stderr so --generate's output actually shows up

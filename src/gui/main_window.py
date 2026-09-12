@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
         # _run_build_executables), not the main app -- this shows *that*
         # build's result, same data as the Home tab's own "Runner build"
         # box (app_state.load_runner_build()), not the unrelated history
-        # of `python scripts/build_release_files.py` runs (which this
+        # of `python src/scripts/build_release_files.py` runs (which this
         # tab's button hasn't triggered since the Qt migration).
         history_box = QGroupBox("Runner build")
         self.history_list_layout = QVBoxLayout(history_box)
@@ -549,7 +549,7 @@ class MainWindow(QMainWindow):
     # works from a shipped exe too -- it only needs a system Python (same
     # find_python() the subprocess actions already used) capable of
     # running PyInstaller, not the app's own bundled runtime. Rebuilding
-    # TS4RLS itself from source is still `python scripts/build_release_files.py`,
+    # TS4RLS itself from source is still `python src/scripts/build_release_files.py`,
     # just without a GUI button for it.
 
     def _run_build_executables(self) -> None:

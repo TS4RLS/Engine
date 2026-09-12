@@ -1,9 +1,9 @@
 """
 TS4RLS runner — a separate, minimal, GUI-less entry point, compiled to its
-own executable (see the Build tab's "Build executable" button, or
-`python scripts/build_release_files.py --runner`) for use OUTSIDE the main
-app: as a Steam "non-Steam game" launch target, or a CurseForge/Overwolf
-custom launch executable.
+own executable by the Build tab's "Build executable" button (see
+src/gui/runner_builder.py) for use OUTSIDE the main app: as a Steam
+"non-Steam game" launch target, or a CurseForge/Overwolf custom launch
+executable.
 
 Running the built runner regenerates the loading screen from the current
 config.json, then launches the game -- no window or console of its own,

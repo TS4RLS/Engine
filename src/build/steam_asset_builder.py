@@ -151,10 +151,27 @@ def build_cover(icon: Image.Image, title, subtitle) -> Image.Image:
     canvas = _textured_background(size, tile_size=56, opacity=0.16, icon=icon)
 
     big_icon = _scaled(icon, 340)
-    _paste_centered(canvas, big_icon, size[0] // 2, 300)
+    target_subtitle_width = 460
+    gap = 10
+    icon_text_gap = 80
 
-    text_top = 300 + big_icon.height // 2 + 80
-    _paste_stacked_wordmark(canvas, title, subtitle, target_subtitle_width=460, cx=size[0] // 2, top_y=text_top)
+    # Figure out the wordmark's scaled height up front (same formula
+    # _paste_stacked_wordmark uses internally) so the icon+text group can
+    # be centered as one block instead of the icon sitting at a fixed y.
+    factor = target_subtitle_width / subtitle.width
+    title_h = int(title.height * factor)
+    subtitle_h = int(subtitle.height * factor)
+
+    total_height = big_icon.height + icon_text_gap + title_h + gap + subtitle_h
+    top = (size[1] - total_height) // 2
+
+    _paste_centered(canvas, big_icon, size[0] // 2, top + big_icon.height // 2)
+
+    text_top = top + big_icon.height + icon_text_gap
+    _paste_stacked_wordmark(
+        canvas, title, subtitle, target_subtitle_width=target_subtitle_width,
+        cx=size[0] // 2, top_y=text_top, gap=gap,
+    )
 
     return canvas.convert("RGB")
 

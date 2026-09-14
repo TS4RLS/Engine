@@ -5,6 +5,20 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.3.1] - 2026-09-14
+
+### Fixed
+- The Build tab's "Build executable" action failed with `ModuleNotFoundError:
+  No module named 'src'` when run from a shipped release exe. The frozen
+  app already shells out to a system Python running
+  `-m src.gui.runner_builder` from its own extraction folder
+  (`sys._MEIPASS`), but `src/build/create_release_files.py`'s `build_gui()`
+  never bundled `src/` or `runner.py` as data there — only `assets/`,
+  `CHANGELOG.md`, and `VERSION.md` were. Those two are now bundled too, so
+  the subprocess has a real `src` package and `runner.py` on disk to build
+  from, matching the "works from a shipped exe, not just a source
+  checkout" design from v5.0.0.
+
 ## [5.3.0] - 2026-09-13
 
 ### Added

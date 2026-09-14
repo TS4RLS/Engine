@@ -82,6 +82,16 @@ def build_gui() -> None:
     # (which resolves to sys._MEIPASS in a frozen build) - bundle them as
     # data so those lookups succeed instead of silently no-op'ing
     # (missing icon/logo/blank changelog) in the packaged exe.
+    #
+    # src/ and runner.py are bundled as data too, not just compiled into
+    # the PYZ archive, so the Build tab's "Build executable" action (which
+    # shells out to a *separate* system Python running
+    # `-m src.gui.runner_builder`, cwd'd at sys._MEIPASS - see
+    # main_window.py's _ROOT/_run_subprocess_action) has an actual `src`
+    # package and `runner.py` on disk to import/compile from. Without
+    # this, that subprocess's cwd has no real `src` directory and fails
+    # with "ModuleNotFoundError: No module named 'src'" the moment it
+    # tries to import it, even though the frozen exe itself runs fine.
     PyInstaller.__main__.run([
         str(REPO_ROOT / "gui.py"),
         "--name=TS4RLS",
@@ -94,6 +104,8 @@ def build_gui() -> None:
         _add_data(REPO_ROOT / "assets", "assets"),
         _add_data(REPO_ROOT / "CHANGELOG.md", "."),
         _add_data(REPO_ROOT / "VERSION.md", "."),
+        _add_data(REPO_ROOT / "src", "src"),
+        _add_data(REPO_ROOT / "runner.py", "."),
         *COMMON_ARGS,
     ])
 

@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.4.2] - 2026-09-14
+
+### Changed
+- Stopped hardcoding a static "CLI is discontinued" blurb into every
+  GitHub Release's notes body (`release.yml`) — that was only ever
+  relevant historically (removed in v3.0.0) and doesn't need repeating on
+  every new release going forward. `generate_release_notes: true` still
+  produces normal auto-generated notes.
+
 ## [5.4.1] - 2026-09-14
 
 ### Fixed

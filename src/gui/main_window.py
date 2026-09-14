@@ -11,6 +11,7 @@ import functools
 import os
 import re
 import shutil
+import subprocess
 import zipfile
 from html import escape
 
@@ -39,6 +40,28 @@ CHANGELOG_PATH = paths.resource_path("CHANGELOG.md")
 FOLDER_KEYS = {"images_folder", "mods_folder", "game_folder"}
 RUNNER_DEFAULT_NAME = "RLSRunner"
 RUNNER_CURSEFORGE_NAME = "TS4_x64"
+
+# Presentation-only: SETTINGS itself (config_editor.py) is the schema config
+# save/load actually relies on -- this is just how the GUI labels/groups
+# those same keys, so the Build tab reads as sectioned settings instead of
+# one flat list of ten unrelated fields in definition order.
+SETTING_LABELS = {
+    "images_folder": "Images folder",
+    "mods_folder": "Mods folder",
+    "is_vertical": "Combine images vertically",
+    "rename_files": "Rename before picking",
+    "non_interactive": "Skip close-prompt",
+    "target_width": "Output width",
+    "target_height": "Output height",
+    "launch_via_steam": "Launch via Steam",
+    "game_folder": "Game install folder",
+    "curseforge_mode": "CurseForge runner name",
+}
+SETTING_GROUPS = [
+    ("Loading screen", ("images_folder", "is_vertical", "rename_files", "target_width", "target_height")),
+    ("Sims 4 paths", ("mods_folder", "game_folder")),
+    ("Launch behavior", ("launch_via_steam", "non_interactive", "curseforge_mode")),
+]
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -190,8 +213,11 @@ class MainWindow(QMainWindow):
 
         settings_box = QGroupBox("Current settings")
         grid = QGridLayout(settings_box)
+        grid.setVerticalSpacing(6)
         for row, (key, kind, desc, required, default) in enumerate(SETTINGS):
-            grid.addWidget(_styled_label(key), row, 0)
+            label = _styled_label(SETTING_LABELS.get(key, key))
+            label.setToolTip(desc)
+            grid.addWidget(label, row, 0)
             value_label = _styled_label("", "hint")
             grid.addWidget(value_label, row, 1)
             self.home_display_labels[key] = value_label
@@ -231,19 +257,13 @@ class MainWindow(QMainWindow):
         add_button("Launch The Sims 4", self._launch_game)
         outer.addLayout(buttons)
 
-        latest_build_box = QGroupBox("Latest build")
-        latest_row = QHBoxLayout(latest_build_box)
-        self.latest_build_label = _styled_label("No builds yet.", "hint")
-        latest_row.addWidget(self.latest_build_label, 1)
-        self.latest_build_copy_button = QPushButton("Copy path")
-        self.latest_build_copy_button.clicked.connect(self._copy_latest_build_path)
-        latest_row.addWidget(self.latest_build_copy_button)
-        outer.addWidget(latest_build_box)
-
         runner_build_box = QGroupBox("Runner build")
         runner_row = QHBoxLayout(runner_build_box)
         self.runner_build_label = _styled_label("Not built yet.", "hint")
         runner_row.addWidget(self.runner_build_label, 1)
+        self.runner_build_run_button = QPushButton("Run executable")
+        self.runner_build_run_button.clicked.connect(self._run_runner_build)
+        runner_row.addWidget(self.runner_build_run_button)
         self.runner_build_copy_exe_button = QPushButton("Copy path")
         self.runner_build_copy_exe_button.clicked.connect(self._copy_runner_build_path)
         runner_row.addWidget(self.runner_build_copy_exe_button)
@@ -280,19 +300,33 @@ class MainWindow(QMainWindow):
         self.legacy_warning.setVisible(legacy_found)
         self.generate_button.setEnabled(not legacy_found)
 
-        self._refresh_latest_build()
         self._refresh_runner_build()
 
     def _refresh_runner_build(self) -> None:
         entry = app_state.load_runner_build()
         if entry:
             self.runner_build_label.setText(f"{entry['path']}\nBuilt {entry['timestamp']}")
+            self.runner_build_run_button.setEnabled(True)
             self.runner_build_copy_exe_button.setEnabled(True)
             self.runner_build_copy_folder_button.setEnabled(True)
         else:
             self.runner_build_label.setText("Not built yet.")
+            self.runner_build_run_button.setEnabled(False)
             self.runner_build_copy_exe_button.setEnabled(False)
             self.runner_build_copy_folder_button.setEnabled(False)
+
+    def _run_runner_build(self) -> None:
+        entry = app_state.load_runner_build()
+        if not entry:
+            return
+        exe_path = entry["path"]
+        if not os.path.isfile(exe_path):
+            QMessageBox.critical(self, "Not found", f"Runner executable not found:\n{exe_path}")
+            return
+        try:
+            subprocess.Popen([exe_path], cwd=os.path.dirname(exe_path))
+        except OSError as e:
+            QMessageBox.critical(self, "Couldn't run", f"Couldn't run {exe_path}: {e}")
 
     def _copy_runner_build_path(self) -> None:
         entry = app_state.load_runner_build()
@@ -303,21 +337,6 @@ class MainWindow(QMainWindow):
         entry = app_state.load_runner_build()
         if entry:
             self._copy_to_clipboard(os.path.dirname(entry["path"]))
-
-    def _refresh_latest_build(self) -> None:
-        history = app_state.load_build_history()
-        if history:
-            latest = history[0]
-            self.latest_build_label.setText(f"{latest['path']}\nBuilt {latest['timestamp']}")
-            self.latest_build_copy_button.setEnabled(True)
-        else:
-            self.latest_build_label.setText("No builds yet.")
-            self.latest_build_copy_button.setEnabled(False)
-
-    def _copy_latest_build_path(self) -> None:
-        history = app_state.load_build_history()
-        if history:
-            self._copy_to_clipboard(history[0]["path"])
 
     def _copy_to_clipboard(self, text: str) -> None:
         QApplication.clipboard().setText(text)
@@ -351,46 +370,68 @@ class MainWindow(QMainWindow):
         outer = QVBoxLayout(self.build_tab)
         outer.setContentsMargins(12, 12, 12, 12)
 
-        settings_box = QGroupBox("Settings")
-        grid = QGridLayout(settings_box)
-
         cfg = config_editor.load_config()
-        for row, (key, kind, desc, required, default) in enumerate(SETTINGS):
-            current = cfg.get(key, None if required else default)
-            if current is None and key == "mods_folder":
-                current = paths.guess_mods_folder() or None
+        settings_by_key = {s[0]: s for s in SETTINGS}
 
-            label_text = key + (" *" if required else "")
-            grid.addWidget(_styled_label(label_text), row, 0, Qt.AlignmentFlag.AlignTop)
+        settings_scroll = QScrollArea()
+        settings_scroll.setWidgetResizable(True)
+        settings_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        settings_body = QWidget()
+        settings_scroll.setWidget(settings_body)
+        settings_layout = QVBoxLayout(settings_body)
+        settings_layout.setContentsMargins(0, 0, 0, 0)
 
-            if kind == "bool":
-                widget = QCheckBox()
-                widget.setChecked(bool(current))
-                grid.addWidget(widget, row, 1, Qt.AlignmentFlag.AlignTop)
-            else:
-                widget = QLineEdit(format_value(current) if current is not None else "")
-                widget.setMinimumWidth(260)
-                grid.addWidget(widget, row, 1, Qt.AlignmentFlag.AlignTop)
-                if key in FOLDER_KEYS:
-                    browse_btn = QPushButton("Browse...")
-                    browse_btn.clicked.connect(functools.partial(self._browse_folder, widget))
-                    grid.addWidget(browse_btn, row, 2, Qt.AlignmentFlag.AlignTop)
+        for group_title, keys in SETTING_GROUPS:
+            group_box = QGroupBox(group_title)
+            grid = QGridLayout(group_box)
+            grid.setVerticalSpacing(2)
+            grid.setHorizontalSpacing(10)
 
-            desc_label = _styled_label(desc, "hint")
-            desc_label.setWordWrap(True)
-            grid.addWidget(desc_label, row, 3, Qt.AlignmentFlag.AlignTop)
+            for row, key in enumerate(keys):
+                _, kind, desc, required, default = settings_by_key[key]
+                current = cfg.get(key, None if required else default)
+                if current is None and key == "mods_folder":
+                    current = paths.guess_mods_folder() or None
 
-            self.field_vars[key] = (widget, kind, required)
+                grid_row = row * 2
+                label_text = SETTING_LABELS.get(key, key) + (" *" if required else "")
+                label = _styled_label(label_text)
+                label.setToolTip(desc)
+                grid.addWidget(label, grid_row, 0, Qt.AlignmentFlag.AlignTop)
 
-        grid.setColumnStretch(1, 1)
-        grid.setColumnStretch(3, 2)
+                if kind == "bool":
+                    widget = QCheckBox()
+                    widget.setChecked(bool(current))
+                    grid.addWidget(widget, grid_row, 1, Qt.AlignmentFlag.AlignTop)
+                else:
+                    widget = QLineEdit(format_value(current) if current is not None else "")
+                    widget.setMinimumWidth(280)
+                    grid.addWidget(widget, grid_row, 1, Qt.AlignmentFlag.AlignTop)
+                    if key in FOLDER_KEYS:
+                        browse_btn = QPushButton("Browse...")
+                        browse_btn.clicked.connect(functools.partial(self._browse_folder, widget))
+                        grid.addWidget(browse_btn, grid_row, 2, Qt.AlignmentFlag.AlignTop)
+                widget.setToolTip(desc)
 
-        footer_row = len(SETTINGS)
-        grid.addWidget(_styled_label("* required", "hint"), footer_row, 0)
+                hint_label = _styled_label(desc, "hint")
+                hint_label.setWordWrap(True)
+                grid.addWidget(hint_label, grid_row + 1, 1, 1, 2)
+
+                self.field_vars[key] = (widget, kind, required)
+
+            grid.setColumnStretch(1, 1)
+            settings_layout.addWidget(group_box)
+
+        settings_layout.addStretch(1)
+        outer.addWidget(settings_scroll)
+
+        footer_row = QHBoxLayout()
+        footer_row.addWidget(_styled_label("* required", "hint"))
+        footer_row.addStretch(1)
         save_btn = QPushButton("Save settings")
         save_btn.clicked.connect(self._save_settings)
-        grid.addWidget(save_btn, footer_row, 1)
-        outer.addWidget(settings_box)
+        footer_row.addWidget(save_btn)
+        outer.addLayout(footer_row)
 
         build_box = QGroupBox("Build")
         build_row = QHBoxLayout(build_box)
@@ -446,6 +487,9 @@ class MainWindow(QMainWindow):
 
         row = QHBoxLayout()
         row.addWidget(QLabel(f"{entry['path']}  ({entry['timestamp']})"), 1)
+        run_btn = QPushButton("Run executable")
+        run_btn.clicked.connect(self._run_runner_build)
+        row.addWidget(run_btn)
         copy_path_btn = QPushButton("Copy path")
         copy_path_btn.clicked.connect(self._copy_runner_build_path)
         row.addWidget(copy_path_btn)

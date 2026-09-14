@@ -1,6 +1,6 @@
 """
 Small persisted app state that isn't user-editable config: the first-launch
-disclaimer flag and recent executable-build history. Kept in its own file
+disclaimer flag and the most recent runner build. Kept in its own file
 (app_state.json), separate from config.json, since the Settings fields
 fully overwrite config.json on every save.
 """
@@ -12,7 +12,6 @@ from datetime import datetime
 from src.common import paths
 
 STATE_FILENAME = "app_state.json"
-MAX_BUILD_HISTORY = 10
 
 
 def _state_path() -> str:
@@ -47,22 +46,8 @@ def confirm_disclaimer() -> None:
     _save(state)
 
 
-def load_build_history() -> list:
-    return _load().get("recent_builds", [])
-
-
-def record_build(exe_path: str) -> None:
-    state = _load()
-    history = [h for h in state.get("recent_builds", []) if h.get("path") != exe_path]
-    history.insert(0, {"path": exe_path, "timestamp": datetime.now().isoformat(timespec="seconds")})
-    state["recent_builds"] = history[:MAX_BUILD_HISTORY]
-    _save(state)
-
-
 def load_runner_build() -> dict:
-    """The most recent runner executable build (see
-    src/gui/runner_builder.py) -- separate from load_build_history()
-    above, which tracks builds of the main app itself, not the runner."""
+    """The most recent runner executable build (see src/gui/runner_builder.py)."""
     return _load().get("runner_build") or {}
 
 

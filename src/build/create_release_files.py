@@ -109,14 +109,6 @@ def build_gui() -> None:
         *COMMON_ARGS,
     ])
 
-    exe_path = DIST_DIR / ("TS4RLS.exe" if IS_WINDOWS else "TS4RLS")
-    if exe_path.is_file():
-        # So the running app's own Home tab ("Latest build") can show
-        # this -- it's a separate developer/dev-tooling script, but the
-        # GUI still reads the same per-user app_state.json.
-        from src.common import app_state
-        app_state.record_build(str(exe_path))
-
 
 def build_steam_zip() -> Path:
     """Zips assets/steam/ into dist/TS4RLS_Steam_Assets.zip -- the same

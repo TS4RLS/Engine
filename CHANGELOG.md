@@ -5,6 +5,36 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.4.0] - 2026-09-14
+
+### Added
+- **"Run executable" button** next to "Copy path"/"Copy folder" on both the
+  Home tab's "Runner build" box and the Build tab's runner-build row —
+  launches the built runner exe directly via `subprocess.Popen` instead of
+  requiring you to copy the path and run it yourself, with an error dialog
+  if the file's gone missing.
+
+### Changed
+- **Build tab settings redesigned** (`main_window.py`): the flat grid of
+  all 10 settings is now three titled `QGroupBox` sections ("Loading
+  screen", "Sims 4 paths", "Launch behavior") with human-readable labels
+  instead of raw `snake_case` config keys, and each field's description
+  moved from a cramped side column to a wrapped hint line underneath (plus
+  a tooltip). The Home tab's "Current settings" summary got the same
+  friendly labels. Wrapped the Build tab's settings in a scroll area so it
+  doesn't crowd out the log panel.
+
+### Removed
+- **The Home tab's "Latest build" box** — dead UI left over from before the
+  v5.0.0 Qt rewrite. It displayed `app_state.load_build_history()`, which
+  is only ever written by `create_release_files.py` (the maintainer's own
+  release-building script, not something a shipped-exe user runs), so for
+  every real user it permanently read "No builds yet." It was superseded
+  by "Runner build" (which tracks the actual per-user runner exe) back in
+  v5.0.0, but nobody removed the old box. Also removed the now-unused
+  `app_state.load_build_history()`/`record_build()` and the dead call site
+  in `create_release_files.py`.
+
 ## [5.3.1] - 2026-09-14
 
 ### Fixed

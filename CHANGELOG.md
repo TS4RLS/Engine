@@ -5,6 +5,16 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.4.1] - 2026-09-14
+
+### Fixed
+- Disabled UPX compression (`--noupx`) in the release build's PyInstaller
+  args (`create_release_files.py`). UPX-compressed executables are a
+  common trigger for AV/Defender heuristic false positives — the sibling
+  TIGHC/TWRAR projects hit this exactly (`Trojan:Win32/Wacatac.B!ml`).
+  TS4RLS hasn't been flagged, but disabled for consistency since it's a
+  free, zero-downside change.
+
 ## [5.4.0] - 2026-09-14
 
 ### Added

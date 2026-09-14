@@ -56,6 +56,13 @@ def _icon_args() -> list[str]:
 COMMON_ARGS = [
     "--onefile",
     "--noconfirm",
+    # UPX-compressed executables are heavily associated with malware
+    # packers and are a common trigger for AV/Defender heuristic false
+    # positives (the sibling TIGHC/TWRAR projects hit exactly this --
+    # Trojan:Win32/Wacatac.B!ml -- since they also bundle input-hooking/
+    # automation libraries) -- disabled here too for consistency even
+    # though TS4RLS hasn't been flagged.
+    "--noupx",
     f"--distpath={DIST_DIR}",
     f"--workpath={BUILD_DIR}",
     f"--specpath={BUILD_DIR}",

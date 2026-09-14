@@ -5,6 +5,17 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.4.3] - 2026-09-14
+
+### Changed
+- **Stopped syncing `assets/steam/` into the Website repo.** Engine's
+  `assets/steam/` is now the single source of truth — the Website's
+  `steam.html` page hotlinks these files' raw GitHub URLs directly instead
+  of relying on a local copy that only stayed current if this script's
+  sync step was remembered (it wasn't, for the sibling TIGHC/TWRAR
+  projects — their Website copies had gone stale). Removed
+  `create_steam_assets.py`'s `WEBSITE_STEAM_DIR` sync step.
+
 ## [5.4.2] - 2026-09-14
 
 ### Changed

@@ -5,6 +5,24 @@ All notable changes to this project are documented here. Versioning follows
 mark breaking config-format/behavior changes, MINOR marks backward-compatible
 feature additions, PATCH marks fixes.
 
+## [5.4.5] - 2026-09-26
+
+### Changed
+- The in-app changelog now sorts each release's `###` sections into a
+  fixed order at render time - Added, Changed, Fixed, Removed, Security,
+  Deprecated, unknown types last - and colours each heading with the
+  shared palette (Added `#2ecc71`, Changed `#3ba7ff`, Fixed `#ffa64d`,
+  Removed `#ff4d4d`, Security `#b06bff`, Deprecated `#8a8a94`; darker
+  shades on the light theme).
+- CHANGELOG sections reordered to Added, Changed, Fixed, Removed, Security,
+  Deprecated.
+
+### Security
+- PyInstaller is pinned to `6.22.2` everywhere it's installed - the release
+  workflow, `src/build/create_release_files.py`, and the in-app runner
+  builder (`src/gui/runner_builder.py`) - so builds are reproducible and
+  never pull in an unreviewed PyInstaller release.
+
 ## [5.4.4] - 2026-09-15
 
 ### Fixed
@@ -177,42 +195,17 @@ feature additions, PATCH marks fixes.
 
 ## [5.0.1] - 2026-09-12
 
+### Changed
+- Moved `scripts/` into `src/scripts/` (`build_release_files.py`,
+  `generate_icon.py`) so all first-party source lives under `src/`.
+
 ### Fixed
 - `cover.png`'s icon+wordmark block is now centered both horizontally
   *and* vertically in the 600x900 canvas (`src/build/steam_asset_builder.py`'s
   `build_cover()`) — it previously pinned the icon at a fixed `y=300`,
   leaving a lot of empty patterned space below the text.
 
-### Changed
-- Moved `scripts/` into `src/scripts/` (`build_release_files.py`,
-  `generate_icon.py`) so all first-party source lives under `src/`.
-
 ## [5.0.0] - 2026-09-12
-
-### Changed
-- **The GUI is rewritten from Tkinter to PySide6/Qt** (`src/gui/`:
-  `theme.py`, `disclaimer.py`, `workers.py`, `main_window.py`,
-  `runner_builder.py`) — a MAJOR bump since this touches how the app
-  looks and runs top to bottom, even though config.json's own format is
-  unchanged. Motivated by a run of Tk-specific bugs this session turned
-  up (the first-launch disclaimer silently never appearing at all on a
-  fresh install, a family of white/gray border bugs in dark mode from
-  clam theme bevel colors) that simply don't exist as a category in Qt.
-  Worker threads now emit Qt signals straight to the UI instead of a
-  manual `queue.Queue` + polling loop; the About tab's scrollable body
-  is a native `QScrollArea` instead of a hand-rolled canvas+scrollbar;
-  the changelog viewer renders real HTML instead of manually walking
-  text with per-run tag_configure() calls. `requirements.txt` gains
-  `PySide6>=6.7`.
-- Default window size bumped to 960×760 (was 780×640) — the Build tab
-  needed more room once `curseforge_mode`/`game_folder` were added.
-- `.github/workflows/release.yml`'s Linux job now installs Qt's runtime
-  libraries (`libegl1`/`libopengl0`) instead of `python3-tk`.
-- `scripts/build_release_files.py` rewritten in the sibling TWRAR
-  project's own style (`pathlib`, installs its own dependencies,
-  `PyInstaller.__main__.run()` instead of a subprocess call) — still
-  builds the release exe by default, or `TS4RLS_Steam_Assets.zip` with
-  `--steam-zip`.
 
 ### Added
 - **A standalone "runner" executable** (`runner.py`, built via
@@ -240,6 +233,31 @@ feature additions, PATCH marks fixes.
 - `paths.user_data_dir()`: public wrapper around the existing per-user
   data directory logic, for callers (the runner builder) outside
   `src/common` that need it.
+
+### Changed
+- **The GUI is rewritten from Tkinter to PySide6/Qt** (`src/gui/`:
+  `theme.py`, `disclaimer.py`, `workers.py`, `main_window.py`,
+  `runner_builder.py`) — a MAJOR bump since this touches how the app
+  looks and runs top to bottom, even though config.json's own format is
+  unchanged. Motivated by a run of Tk-specific bugs this session turned
+  up (the first-launch disclaimer silently never appearing at all on a
+  fresh install, a family of white/gray border bugs in dark mode from
+  clam theme bevel colors) that simply don't exist as a category in Qt.
+  Worker threads now emit Qt signals straight to the UI instead of a
+  manual `queue.Queue` + polling loop; the About tab's scrollable body
+  is a native `QScrollArea` instead of a hand-rolled canvas+scrollbar;
+  the changelog viewer renders real HTML instead of manually walking
+  text with per-run tag_configure() calls. `requirements.txt` gains
+  `PySide6>=6.7`.
+- Default window size bumped to 960×760 (was 780×640) — the Build tab
+  needed more room once `curseforge_mode`/`game_folder` were added.
+- `.github/workflows/release.yml`'s Linux job now installs Qt's runtime
+  libraries (`libegl1`/`libopengl0`) instead of `python3-tk`.
+- `scripts/build_release_files.py` rewritten in the sibling TWRAR
+  project's own style (`pathlib`, installs its own dependencies,
+  `PyInstaller.__main__.run()` instead of a subprocess call) — still
+  builds the release exe by default, or `TS4RLS_Steam_Assets.zip` with
+  `--steam-zip`.
 
 ### Fixed
 - `runner_builder.py` checked for PyInstaller *after* already importing
@@ -271,6 +289,36 @@ feature additions, PATCH marks fixes.
   Steam" setting in the Build tab and set a **game folder** instead for
   a direct `TS4_x64.exe`/`TS4.exe` launch (EA App/Origin installs, or
   anyone who'd rather not go through Steam).
+
+### Changed
+- Window title reformatted to `TS4RLS (The Sims 4 Random Loading
+  Screen) — vX.Y.Z`.
+- Checkbox indicators now use the theme's accent/panel colors instead
+  of clam's default light-gray look.
+- The theme toggle button moved from a persistent bar above the tabs
+  into the Home tab.
+- About tab now shows the full logo banner (`assets/logo.png`) instead
+  of a small icon plus a separate text header.
+- The Home/Build action logs and the changelog viewer now use a themed
+  `ttk.Scrollbar` instead of `scrolledtext.ScrolledText`'s built-in one —
+  Tk delegates that widget's rendering to Windows' native Visual Styles
+  engine, so it always rendered as a stark white scrollbar regardless of
+  the active theme.
+- Regenerated every Steam library asset (`assets/steam/`) from the
+  current `icon.png`/`logo.png` — they'd drifted out of sync with the
+  app's own branding since v4.0.0. Background patterns also switched to
+  smaller, denser icon tiles instead of a few oversized, sparse ones,
+  and `cover.png`/`logo.png` now center the title and subtitle text
+  independently instead of as one left-aligned block (which left the
+  narrower "TS4RLS" title looking off-center under the icon). Added a
+  second logo style, `logo_horizontal.png` (icon beside the wordmark,
+  rather than stacked above it), as an alternative for the same Library
+  logo slot. Added `src/build/steam_asset_builder.py` so none of this
+  has to be redone by hand again.
+- `CONTRIBUTING.md` moved back to the repo root (out of `docs/`, which
+  no longer exists), matching every other repo doc.
+- `STEAM_GUIDE.md` removed — the Steam artwork download and setup info
+  it held now lives on the website (`ts4rls.stuxie.dev/steam`) instead.
 
 ### Fixed
 - **Link/hint/error label colors weren't rendering the theme's accent
@@ -316,36 +364,6 @@ feature additions, PATCH marks fixes.
   theme's own colors so every edge renders as one flat, correctly
   dark (or light) line instead.
 
-### Changed
-- Window title reformatted to `TS4RLS (The Sims 4 Random Loading
-  Screen) — vX.Y.Z`.
-- Checkbox indicators now use the theme's accent/panel colors instead
-  of clam's default light-gray look.
-- The theme toggle button moved from a persistent bar above the tabs
-  into the Home tab.
-- About tab now shows the full logo banner (`assets/logo.png`) instead
-  of a small icon plus a separate text header.
-- The Home/Build action logs and the changelog viewer now use a themed
-  `ttk.Scrollbar` instead of `scrolledtext.ScrolledText`'s built-in one —
-  Tk delegates that widget's rendering to Windows' native Visual Styles
-  engine, so it always rendered as a stark white scrollbar regardless of
-  the active theme.
-- Regenerated every Steam library asset (`assets/steam/`) from the
-  current `icon.png`/`logo.png` — they'd drifted out of sync with the
-  app's own branding since v4.0.0. Background patterns also switched to
-  smaller, denser icon tiles instead of a few oversized, sparse ones,
-  and `cover.png`/`logo.png` now center the title and subtitle text
-  independently instead of as one left-aligned block (which left the
-  narrower "TS4RLS" title looking off-center under the icon). Added a
-  second logo style, `logo_horizontal.png` (icon beside the wordmark,
-  rather than stacked above it), as an alternative for the same Library
-  logo slot. Added `src/build/steam_asset_builder.py` so none of this
-  has to be redone by hand again.
-- `CONTRIBUTING.md` moved back to the repo root (out of `docs/`, which
-  no longer exists), matching every other repo doc.
-- `STEAM_GUIDE.md` removed — the Steam artwork download and setup info
-  it held now lives on the website (`ts4rls.stuxie.dev/steam`) instead.
-
 ## [4.4.0] - 2026-09-10
 
 ### Added
@@ -372,18 +390,18 @@ feature additions, PATCH marks fixes.
 
 ## [4.3.1] - 2026-09-10
 
+### Added
+- Every GitHub Release now carries a standing notice that the text-menu
+  CLI is discontinued and unsupported (removed in v3.0.0) — added as a
+  static `body` alongside `generate_release_notes` in
+  `.github/workflows/release.yml`.
+
 ### Fixed
 - **v4.3.0's release build failed on Linux and macOS** ("Permission
   denied" running `./build.sh`) because the new `build.sh`/`commit.sh`
   were committed without the executable bit — git tracked them as `100644`
   instead of `100755`. Windows silently worked anyway (no v4.3.0 GitHub
   Release was ever published, just a tag with no build artifacts).
-
-### Added
-- Every GitHub Release now carries a standing notice that the text-menu
-  CLI is discontinued and unsupported (removed in v3.0.0) — added as a
-  static `body` alongside `generate_release_notes` in
-  `.github/workflows/release.yml`.
 
 ## [4.3.0] - 2026-09-10
 

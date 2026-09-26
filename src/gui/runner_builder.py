@@ -38,6 +38,9 @@ DEFAULT_NAME = "RLSRunner"
 # per-user directory config.json/app_state.json already use.
 OUTPUT_DIR = Path(paths.user_data_dir())
 BUILD_DIR = OUTPUT_DIR / "_runner_build"
+# Same pinned version src/build/create_release_files.py installs, so a
+# runner build never pulls an unreviewed PyInstaller release.
+PYINSTALLER_REQUIREMENT = "pyinstaller==6.22.2"
 
 _DATA_SEP = ";" if IS_WINDOWS else ":"
 
@@ -59,7 +62,7 @@ def _icon_args() -> list[str]:
 def ensure_pyinstaller() -> None:
     import importlib.util
     if importlib.util.find_spec("PyInstaller") is None:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller", "-q"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", PYINSTALLER_REQUIREMENT, "-q"])
 
 
 def build(name: str = DEFAULT_NAME) -> Path:

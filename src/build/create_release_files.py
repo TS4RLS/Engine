@@ -32,6 +32,9 @@ if str(REPO_ROOT) not in sys.path:
 VERSION = (REPO_ROOT / "VERSION.md").read_text(encoding="utf-8").strip()
 DIST_DIR = REPO_ROOT / "dist"
 BUILD_DIR = REPO_ROOT / "build"
+# Pinned so release builds are reproducible and a compromised or broken
+# future PyInstaller release is never pulled in unreviewed.
+PYINSTALLER_REQUIREMENT = "pyinstaller==6.22.2"
 STEAM_ZIP_NAME = "TS4RLS_Steam_Assets.zip"
 
 _DATA_SEP = ";" if IS_WINDOWS else ":"
@@ -78,7 +81,7 @@ def ensure_dependencies() -> None:
     subprocess.check_call(
         [sys.executable, "-m", "pip", "install", "-r", str(REPO_ROOT / "requirements.txt"), "-q"]
     )
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller", "-q"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", PYINSTALLER_REQUIREMENT, "-q"])
 
 
 def build_gui() -> None:

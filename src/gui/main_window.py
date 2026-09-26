@@ -117,13 +117,16 @@ def _render_changelog_html(md_text: str, theme_name: str, tokens: dict) -> str:
             out.append("</ul>")
             in_list = False
 
-    for line in md_text.splitlines():
+    dark = theme_name == "dark"
+    for line in theme.sort_changelog_sections(md_text).splitlines():
         if line.startswith("## "):
             close_list()
             out.append(f'<h2 style="color:{accent};">{inline(line[3:].strip())}</h2>')
         elif line.startswith("### "):
             close_list()
-            out.append(f'<h3 style="color:{text_dim};">{inline(line[4:].strip())}</h3>')
+            section = line[4:].strip()
+            color = theme.changelog_section_color(section, dark) or text_dim
+            out.append(f'<h3 style="color:{color};">{inline(section)}</h3>')
         elif line.startswith("- ") or line.startswith("  - "):
             if not in_list:
                 out.append("<ul>")

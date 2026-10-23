@@ -25,6 +25,14 @@ def test_parse_version_pads_missing_parts():
     assert update_checker._parse_version("4.3") == (4, 3, 0)
 
 
+def test_parse_version_date_version_and_same_day_suffix():
+    assert update_checker._parse_version("v26.10.23") == (26, 10, 23)
+    assert update_checker._parse_version("26.10.23-2") == (26, 10, 23, 2)
+    assert update_checker.is_newer("v26.10.23-1", "26.10.23") is True
+    assert update_checker.is_newer("v26.10.24", "26.10.23-3") is True
+    assert update_checker.is_newer("v26.10.23", "5.4.5") is True
+
+
 def test_parse_version_non_numeric_part_sorts_as_zero():
     assert update_checker._parse_version("4.x.1") == (4, 0, 1)
 

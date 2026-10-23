@@ -87,20 +87,12 @@ loading correctly in-game, the executable build), verify manually:
 
 ## Versioning
 
-Every user-facing change should bump [`VERSION.md`](../VERSION.md) and add
-a matching entry to [`CHANGELOG.md`](../CHANGELOG.md) in the same PR,
-following [Semantic Versioning](https://semver.org/): MAJOR for breaking
-config-format/behavior changes, MINOR for backward-compatible feature
-additions, PATCH for fixes. Small non-user-facing changes (typo fixes,
-comments) don't need a bump.
+This project uses [Date Versioning](https://datevers.ing). To release:
 
-## Release flow
-
-1. Update `CHANGELOG.md`.
-2. Bump `VERSION.md`.
-3. Update `README.md` if behavior changed.
-4. Run `commit.sh` (or `commit.bat` on Windows) — it commits and
-   tags `vX.Y.Z` from `VERSION.md`.
+1. Add a `## vYY.MM.DD` entry at the top of `CHANGELOG.md`, with its sections in this order: Added, Changed, Fixed, Removed, Security, Deprecated.
+2. Set `VERSION.md` to the same bare version (no `v`): today's **UTC** date as `YY.MM.DD`, or `YY.MM.DD-1`, `-2`… for later releases the same UTC day. Never a future date. Use UTC, not local time: just after midnight in the UK it is still the previous day in UTC.
+3. Run `bash tests/version.sh`.
+4. Run `./commit.sh` (or `commit.bat` on Windows). It checks the version, commits and tags `vYY.MM.DD`, and never pushes.
 
 ## Reporting a bug
 

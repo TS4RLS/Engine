@@ -27,16 +27,21 @@ class UpdateCheckResult:
 
 
 def _parse_version(version: str) -> tuple:
-    """'v4.3.1' / '4.3.1' -> (4, 3, 1). Non-numeric parts sort as 0 so a
-    malformed version doesn't crash the comparison, just compares low."""
-    cleaned = version.strip().lstrip("vV")
+    """'v26.10.23' / '26.10.23' -> (26, 10, 23); a same-day suffix
+    ('26.10.23-2') appends the counter, (26, 10, 23, 2), so it sorts after
+    the plain date. Non-numeric parts sort as 0 so a malformed version
+    doesn't crash the comparison, just compares low."""
+    cleaned, _, suffix = version.strip().lstrip("vV").partition("-")
     parts = []
     for part in cleaned.split("."):
         digits = "".join(ch for ch in part if ch.isdigit())
         parts.append(int(digits) if digits else 0)
     while len(parts) < 3:
         parts.append(0)
-    return tuple(parts[:3])
+    parts = parts[:3]
+    if suffix.isdigit():
+        parts.append(int(suffix))
+    return tuple(parts)
 
 
 def is_newer(latest: str, current: str) -> bool:
